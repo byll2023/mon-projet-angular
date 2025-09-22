@@ -1,0 +1,294 @@
+/* 🌐 BASE MOBILE-FIRST */
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f5f7fa;
+  color: #2c3e50;
+  text-align: center;
+  scroll-behavior: smooth;
+  line-height: 1.6;
+}
+
+/* 🔝 HEADER */
+header {
+  background: linear-gradient(135deg, #19394f, #0f2532);
+  color: #fff;
+  padding: 20px 15px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+header h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  text-align: center;
+}
+
+header p {
+  margin: 6px 0 0;
+  font-size: 15px;
+  opacity: 0.9;
+  text-align: center;
+}
+
+/* 📌 SECTIONS */
+section {
+  padding: 40px 20px;
+}
+
+/* HERO */
+.hero {
+  background: #fff3e0;
+  border-radius: 12px;
+  margin: 20px auto;
+  max-width: 900px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.hero h2 {
+  font-size: 24px;
+  margin-bottom: 12px;
+  color: #19394f;
+}
+
+.hero p {
+  font-size: 17px;
+  margin-bottom: 25px;
+  color: #555;
+}
+
+/* 🎯 BOUTONS */
+.btn {
+  display: inline-block;
+  padding: 12px 24px;
+  font-size: 16px;
+  background: #19394f;
+  color: #fff;
+  border-radius: 10px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.btn:hover {
+  background: #145072;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 📝 FORMULAIRE INSCRIPTION */
+form {
+  background: #fff;
+  max-width: 100%;
+  margin: 25px auto;
+  padding: 25px;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: left;
+}
+
+form label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #19394f;
+}
+
+form input[type="text"],
+form input[type="email"],
+form input[type="checkbox"] {
+  width: 100%;
+  margin-bottom: 15px;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  transition: border 0.2s;
+}
+
+form input:focus {
+  border-color: #19394f;
+  outline: none;
+}
+
+form button {
+  width: 100%;
+  padding: 14px;
+  font-size: 17px;
+  border: none;
+  background: #19394f;
+  color: white;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: 600;
+}
+
+form button:hover {
+  background: #145072;
+  transform: translateY(-2px);
+}
+
+/* 🕹️ JEU */
+.jeu {
+  background: #fff;
+  max-width: 520px;
+  margin: 25px auto;
+  padding: 30px;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.code {
+  font-size: 26px;
+  margin: 20px 0;
+  letter-spacing: 8px;
+  font-weight: bold;
+  color: #19394f;
+}
+
+.jeu input[type="text"] {
+  padding: 12px;
+  font-size: 20px;
+  width: 60px;
+  text-align: center;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.result {
+  margin-top: 18px;
+  font-size: 17px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+/* 🎁 BONUS */
+.bonus {
+  margin-top: 18px;
+  background: #fff3e0;
+  padding: 18px;
+  border-radius: 12px;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.bonus input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #bbb;
+  text-align: center;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+/* ⭐ AVIS GAGNANTS */
+.avis {
+  background: #fff3e0;
+  padding: 40px 20px;
+  border-radius: 12px;
+  margin-top: 30px;
+}
+
+.avis h3 {
+  margin-bottom: 20px;
+  font-size: 22px;
+  color: #19394f;
+}
+
+.temoignages {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: center;
+}
+
+.carte-avis {
+  background: white;
+  padding: 18px;
+  width: 90%;
+  border-radius: 14px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: transform 0.25s ease;
+}
+
+.carte-avis:hover {
+  transform: translateY(-3px);
+}
+
+.carte-avis img {
+  width: 100%;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+/* ⚓ FOOTER */
+footer {
+  background: #19394f;
+  color: #fff;
+  padding: 20px 15px;
+  text-align: center;
+  margin-top: 40px;
+  font-size: 14px;
+}
+
+/* 🖥️ DESKTOP / GRAND ÉCRAN */
+@media (min-width: 768px) {
+  header h1 {
+    font-size: 30px;
+  }
+
+  header p {
+    font-size: 17px;
+  }
+
+  .hero {
+    padding: 70px 50px;
+  }
+
+  .hero h2 {
+    font-size: 28px;
+  }
+
+  .hero p {
+    font-size: 19px;
+  }
+
+  .btn {
+    padding: 14px 28px;
+    font-size: 18px;
+  }
+
+  form {
+    max-width: 450px;
+    padding: 30px;
+  }
+
+  .jeu {
+    max-width: 520px;
+    padding: 30px;
+  }
+
+  .code {
+    font-size: 32px;
+    letter-spacing: 10px;
+  }
+
+  .avis h3 {
+    font-size: 26px;
+  }
+
+  .temoignages {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .carte-avis {
+    width: 260px;
+  }
+}

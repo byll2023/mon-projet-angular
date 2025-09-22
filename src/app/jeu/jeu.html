@@ -1,0 +1,68 @@
+<div class="zone-jeu">
+
+  <!-- HEADER -->
+  <header>
+    <h1>🎁 Jeu Ferargile</h1>
+    <p>Tentez de gagner vos chaussettes avant le lancement officiel !</p>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <h2>Participez en 3 étapes simples</h2>
+    <p>Inscrivez-vous, jouez et découvrez si vous êtes l’heureux gagnant !</p>
+    <button class="btn" (click)="afficherFormulaire()">Je tente ma chance</button>
+  </section>
+
+  <!-- INSCRIPTION -->
+  <section id="inscription" *ngIf="afficherInscription">
+    <h2>Inscription au jeu</h2>
+    <form>
+      <input type="text" placeholder="Votre prénom" [(ngModel)]="prenom" name="prenom" required>
+      <input type="email" placeholder="Votre email" [(ngModel)]="email" name="email" required>
+      <label>
+        <input type="checkbox" [(ngModel)]="accepterNewsletter" name="newsletter">
+        J’accepte de recevoir les nouveautés Ferargile
+      </label>
+      <button type="button" class="btn" (click)="inscription()">Valider l'inscription</button>
+    </form>
+  </section>
+
+  <!-- JEU -->
+  <section id="jeuSection" class="jeu" *ngIf="afficherJeu">
+    <h2>Code à deviner</h2>
+    <p class="code">{{ codeAffiche }}</p>
+    <p>Chrono : {{ chrono }} secondes</p>
+
+    <input type="text" [(ngModel)]="lettreSaisie" maxlength="1" placeholder="Entrez une lettre" />
+    <button class="btn" (click)="verifierCode()">Vérifier</button>
+
+    <p class="result" [style.color]="resultColor">{{ resultatMessage }}</p>
+    <p>Bonus restants : {{ compteurBonus }}</p>
+  </section>
+
+  <!-- BONUS / PARRAINAGE -->
+  <section id="bonusMessage" class="bonus" *ngIf="afficherBonus && bonusDisponible">
+    <p>Invitez vos amis avec ce lien :</p>
+    <input type="text" [value]="lienParrainage" readonly />
+    <button class="btn" (click)="copierLien()">Copier</button>
+  </section>
+
+  <!-- AVIS GAGNANTS -->
+  <section class="avis">
+    <h3>Ils ont gagné, pourquoi pas vous ?</h3>
+    <div class="temoignages">
+      <div class="carte-avis" *ngFor="let avis of avisGagnants">
+        <img [src]="avis.image" alt="Photo {{ avis.nom }}" />
+        <p>"{{ avis.message }}"</p>
+        <p>- {{ avis.nom }} ({{ avis.ville }})</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>© 2025 Ferargile. Tous droits réservés.</p>
+    <p>Suivez-nous sur Instagram & Facebook</p>
+  </footer>
+
+</div>
