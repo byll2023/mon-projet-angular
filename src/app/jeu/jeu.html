@@ -13,6 +13,7 @@
     <p>Un code de 8 caractères apparaît avec une lettre manquante.</p>
     <p>Vous devez deviner la lettre manquante <strong>(Indice : A-Z)</strong>.</p>
     <p>Vous avez <strong>30 secondes</strong> pour trouver la lettre.</p>
+    <p>Vous avez droit à 3 tentatives pendant le temps imparti.</p>
     <p>Si vous échouez, vous pouvez inviter un ami pour obtenir un bonus.</p>
     <button class="btn" (click)="afficherFormulaire()">Je tente ma chance</button>
   </section>
@@ -42,16 +43,26 @@
   <section id="jeuSection" class="jeu" *ngIf="afficherJeu">
     <h2>Code à deviner</h2>
     <p class="code">{{ codeAffiche }}</p>
-    <p>Chrono : {{ chrono }} secondes</p>
+    <p *ngIf="chrono > 0">⏱ Chrono : {{ chrono }} secondes</p>
 
     <label for="lettre">Votre lettre</label>
-    <input id="lettre" type="text" [(ngModel)]="lettreSaisie" name="lettre" maxlength="1"
-      placeholder="Entrez une lettre" />
+    <input id="lettre" type="text" [(ngModel)]="lettreSaisie" name="lettre" maxlength="1" placeholder="Entrez une lettre" />
     <button class="btn" (click)="verifierCode()">Vérifier</button>
 
     <p class="result" [style.color]="resultColor">{{ resultatMessage }}</p>
+
+    <!-- BOUTON BONUS SÉCURE -->
+    <div *ngIf="joueurActuel && joueurActuel.tentatives >= 3 && compteurBonus > 0">
+      <button (click)="inviterAmi()">🎁 Inviter un ami pour rejouer</button>
+      <p>Vous pouvez inviter jusqu’à 3 amis pour obtenir des secondes chances.</p>
+    </div>
     <p>Bonus restants : {{ compteurBonus }}</p>
   </section>
+
+  <!-- Bouton qui apparaît uniquement si victoire -->
+  <button id="btnContinuer" *ngIf="resultColor === 'green' && !afficherAdresse" class="btn" (click)="passerAdresse()">
+    Continuer ➡️
+  </button>
 
   <!-- FORMULAIRE ADRESSE -->
   <section id="adresseForm" class="adresse-livraison" *ngIf="afficherAdresse">
@@ -62,8 +73,6 @@
 
       <label for="adresseLivraison">Adresse complète</label>
       <input type="text" placeholder="Adresse complète" [(ngModel)]="adresse" name="adresse" required />
-
-
 
       <label for="villeLivraison">Ville</label>
       <input type="text" placeholder="Ville" [(ngModel)]="ville" name="ville" required />

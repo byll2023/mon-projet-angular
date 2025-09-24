@@ -6,7 +6,6 @@ import emailjs from '@emailjs/browser';
 interface Joueur {
   prenom: string;
   token: string;
-  bonus: number;
   tentatives: number;
 }
 
@@ -34,13 +33,14 @@ export class JeuComponent implements OnInit {
   lettreSaisie: string = '';
   chrono: number = 40;
   timer!: ReturnType<typeof setInterval>;
-  maxBonus: number = 3;
-  lettresGagnantes: string[] = ['A', 'B', 'C', 'D', 'E'];
+  maxBonus: number = 3; // utilisé comme nombre max d'invitations
+  lettresGagnantes: string[] = ['X', 'D', 'F', 'Y', 'U'];
 
   // Joueur inscription
   prenom: string = '';
   email: string = '';
   accepterNewsletter: boolean = false;
+  joueurActuel?: Joueur; // ← ici, avec les autres variables joueur
 
   // Adresse livraison
   prenomLivraison: string = '';
@@ -48,7 +48,7 @@ export class JeuComponent implements OnInit {
   ville: string = '';
   codePostal: string = '';
 
-  // Emails déjà inscrits
+  // Stockage local des joueurs
   emailsInscrits: { [key: string]: Joueur } = {};
 
   // Affichage
@@ -57,7 +57,7 @@ export class JeuComponent implements OnInit {
   afficherBonus: boolean = false;
   bonusDisponible: boolean = true;
   afficherAdresse: boolean = false;
-  compteurBonus: number = 0;
+  compteurBonus: number = 0; // nombre d'invitations restantes (maxBonus - invites)
   resultatMessage: string = '';
   resultColor: string = 'black';
   lienParrainage: string = '';
@@ -72,16 +72,23 @@ export class JeuComponent implements OnInit {
   ngOnInit(): void {
     this.emailsInscrits = JSON.parse(localStorage.getItem('emailsJeu') || '{}');
 
+    // Si on arrive avec un lien de parrainage ?invite=TOKEN
     const urlParams = new URLSearchParams(window.location.search);
     const tokenInvite = urlParams.get('invite');
 
     if (tokenInvite) {
+      // Trouver joueur par token et incrémenter son compteur d'invites (si < max)
       for (let mail in this.emailsInscrits) {
         const joueur = this.emailsInscrits[mail];
-        if (joueur.token === tokenInvite && joueur.bonus < this.maxBonus) {
-          joueur.bonus++;
-          localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
-          this.majCompteur(mail);
+        if (!joueur) continue;
+        if (joueur.token === tokenInvite) {
+          const invites = parseInt(localStorage.getItem(mail + '_invites') || '0', 10);
+          if (invites < this.maxBonus) {
+            const newInvites = invites + 1;
+            localStorage.setItem(mail + '_invites', newInvites.toString());
+            // Optionnel : accorder immédiatement une tentative au parrainé ? ici on n'en donne pas.
+            this.majCompteur(mail);
+          }
           break;
         }
       }
@@ -96,20 +103,34 @@ export class JeuComponent implements OnInit {
 
   inscription(): void {
     const emailLower = this.email.toLowerCase();
-    const joueur = this.emailsInscrits[emailLower];
+    let joueur = this.emailsInscrits[emailLower];
 
-    if (joueur && joueur.tentatives >= 20) {
-      alert('Vous avez atteint le maximum de tentatives.');
+    // Si le joueur n'existe pas, on le crée
+    if (!joueur) {
+      const token = btoa(emailLower + Date.now());
+      this.emailsInscrits[emailLower] = { prenom: this.prenom || 'Participant', token, tentatives: 0 };
+      joueur = this.emailsInscrits[emailLower]; // ← récupère l'objet créé
+      localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
+
+      // initialiser invites si absent
+      if (!localStorage.getItem(emailLower + '_invites')) {
+        localStorage.setItem(emailLower + '_invites', '0');
+      }
+    }
+
+    this.joueurActuel = joueur; // maintenant joueurActuel est bien défini
+    this.majCompteur(emailLower);
+
+    // Si joueur existe et a >=3 tentatives, on lui dit d’inviter un ami
+    if (joueur.tentatives >= 3 && this.compteurBonus > 0) {
+      this.resultatMessage = `❌ Vous avez atteint le maximum de tentatives ! Invitez un ami pour obtenir une seconde chance (${this.maxBonus - this.compteurBonus}/${this.maxBonus} utilisés).`;
+      this.resultColor = 'red';
+      this.afficherBonus = true;
+      this.afficherJeu = true;
       return;
     }
 
-    if (!joueur) {
-      const token = btoa(emailLower + Date.now());
-      this.emailsInscrits[emailLower] = { prenom: this.prenom, token, bonus: 0, tentatives: 0 };
-      localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
-    }
-
-    this.majCompteur(emailLower);
+    // Sinon, démarrer le jeu normalement
     this.afficherJeu = true;
     this.nouvellePartie();
     this.startTimer();
@@ -118,8 +139,9 @@ export class JeuComponent implements OnInit {
   }
 
   majCompteur(email: string): void {
-    const joueur = this.emailsInscrits[email];
-    const restant = this.maxBonus - joueur.bonus;
+    // met à jour compteur des invitations restantes pour affichage
+    const invites = parseInt(localStorage.getItem(email + '_invites') || '0', 10);
+    const restant = this.maxBonus - invites;
     this.compteurBonus = restant >= 0 ? restant : 0;
   }
 
@@ -133,6 +155,7 @@ export class JeuComponent implements OnInit {
     this.codeComplet = this.genererCode();
     let codeArray = this.codeComplet.split('');
 
+    // choisir un index manquant qui n'est pas un numéro
     do {
       this.indexManquant = Math.floor(Math.random() * codeArray.length);
     } while (!isNaN(Number(codeArray[this.indexManquant])));
@@ -149,26 +172,87 @@ export class JeuComponent implements OnInit {
   verifierCode(): void {
     const input = this.lettreSaisie.toUpperCase();
     const emailLower = this.email.toLowerCase();
-    const joueur = this.emailsInscrits[emailLower];
+    const joueur = this.joueurActuel;
+
+    if (!joueur) {
+      alert('Veuillez vous inscrire avant de jouer.');
+      return;
+    }
 
     joueur.tentatives++;
     localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
 
     if (input === this.lettreCorrecte) {
       clearInterval(this.timer);
-      this.resultatMessage = '🎉 Félicitations ! Vous avez gagné vos chaussettes Ferargile !';
+      this.resultatMessage = '🎉 Félicitations ! Vous avez trouvé la bonne lettre 🎯';
       this.resultColor = 'green';
-      this.afficherAdresse = true;
+      this.chrono = 0;
+
+      setTimeout(() => document.getElementById('btnContinuer')?.scrollIntoView({ behavior: 'smooth' }), 300);
+
     } else {
-      if (joueur.tentatives >= 20) {
-        this.resultatMessage = '❌ Vous avez atteint le maximum de tentatives !';
-        this.codeAffiche = '---';
+      const invites = parseInt(localStorage.getItem(emailLower + '_invites') || '0', 10);
+
+      if (joueur.tentatives >= 3 && invites < this.maxBonus) {
+        // Afficher message + bouton inviter
+        this.resultatMessage = `❌ Vous avez atteint le maximum de tentatives ! Invitez un ami pour rejouer (${invites}/${this.maxBonus} invités).`;
+        this.resultColor = 'red';
         this.afficherBonus = true;
+        this.majCompteur(emailLower);
+      } else if (joueur.tentatives >= 3 && invites >= this.maxBonus) {
+        clearInterval(this.timer);
+        this.resultatMessage = '❌ Vous avez atteint le maximum de tentatives et déjà invité 3 amis.';
+        this.resultColor = 'red';
+        this.codeAffiche = '---';
+        this.afficherBonus = false;
       } else {
         this.resultatMessage = '❌ Mauvais choix... retentez votre chance !';
+        this.resultColor = 'red';
       }
-      this.resultColor = 'red';
     }
+  }
+
+  inviterAmi(): void {
+    const emailLower = this.email.toLowerCase();
+    const joueur = this.emailsInscrits[emailLower];
+
+    if (!joueur) {
+      alert('Veuillez vous inscrire avant d’inviter un ami.');
+      return;
+    }
+
+    let invites = parseInt(localStorage.getItem(emailLower + '_invites') || '0', 10);
+
+    if (invites >= this.maxBonus) {
+      alert('❌ Vous avez déjà invité 3 amis. Plus de seconde chance possible.');
+      this.afficherBonus = false;
+      return;
+    }
+
+    // Générer un lien de parrainage
+    this.lienParrainage = `${window.location.href.split('?')[0]}?invite=${joueur.token}`;
+
+    // Copier dans le presse-papiers si possible
+    navigator.clipboard?.writeText(this.lienParrainage).then(() => {
+      alert(`📩 Lien copié ! Partagez-le avec un ami pour obtenir une seconde chance.\n\n${this.lienParrainage}`);
+    }).catch(() => {
+      // fallback si clipboard non disponible
+      alert(`📩 Partagez ce lien avec un ami pour obtenir une seconde chance :\n\n${this.lienParrainage}`);
+    });
+
+    // Incrémenter le compteur d'invitations côté parrain
+    invites++;
+    localStorage.setItem(emailLower + '_invites', invites.toString());
+
+    // Redonner une tentative (on décrémente le compteur de tentatives pour permettre rejouer)
+    joueur.tentatives = Math.max(0, joueur.tentatives - 1);
+    localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
+
+    // Relancer une partie
+    this.nouvellePartie();
+    this.startTimer();
+    this.afficherBonus = false;
+    this.majCompteur(emailLower);
   }
 
   startTimer(): void {
@@ -187,13 +271,19 @@ export class JeuComponent implements OnInit {
   finChronoOuEchec(): void {
     const emailLower = this.email.toLowerCase();
     const joueur = this.emailsInscrits[emailLower];
+    if (!joueur) return;
+
+    // Considérer comme tentative utilisée à la fin du chrono
+    joueur.tentatives++;
+    localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
 
     this.codeAffiche = '---';
     this.resultatMessage = '⏰ Temps écoulé ! Invitez un ami pour rejouer.';
     this.resultColor = 'orange';
 
     this.afficherBonus = true;
-    this.bonusDisponible = joueur.bonus < this.maxBonus;
+    const invites = parseInt(localStorage.getItem(emailLower + '_invites') || '0', 10);
+    this.bonusDisponible = invites < this.maxBonus;
     if (this.bonusDisponible) {
       this.lienParrainage = `${window.location.href.split('?')[0]}?invite=${joueur.token}`;
     }
@@ -201,8 +291,12 @@ export class JeuComponent implements OnInit {
   }
 
   // ================== LIVRAISON ==================
-  validerAdresse(): void {
+  passerAdresse(): void {
+    this.afficherAdresse = true;
+    setTimeout(() => document.getElementById('adresseForm')?.scrollIntoView({ behavior: 'smooth' }));
+  }
 
+  validerAdresse(): void {
     if (!this.prenom || !this.adresse || !this.ville || !this.codePostal) {
       alert('Veuillez remplir tous les champs.');
       return;
@@ -249,12 +343,16 @@ L'équipe Ferargile 🧦
 
   // ================== PARTAGE ==================
   copierLien(): void {
+    if (!this.lienParrainage) {
+      alert('Aucun lien à copier.');
+      return;
+    }
     navigator.clipboard.writeText(this.lienParrainage)
       .then(() => alert('Lien copié ! Partagez-le avec vos amis.'));
   }
 
   partager(reseau: 'facebook' | 'whatsapp' | 'twitter' | 'instagram'): void {
-    const url = encodeURIComponent(window.location.href);
+    const url = encodeURIComponent(window.location.href.split('?')[0] + '?invite=' + encodeURIComponent(this.lienParrainage?.split('?invite=')[1] || ''));
     const message = encodeURIComponent(`🎉 J’ai gagné mes chaussettes Ferargile ! Viens tenter ta chance 👉 ${window.location.href}`);
 
     if (reseau === 'facebook') {
