@@ -41,7 +41,7 @@ export class JeuComponent implements OnInit {
   email: string = '';
   accepterNewsletter: boolean = false;
   joueurActuel?: Joueur; // ← ici, avec les autres variables joueur
-
+  invitationEnvoyee: boolean = false;
   // Adresse livraison
   prenomLivraison: string = '';
   adresse: string = '';
@@ -69,31 +69,44 @@ export class JeuComponent implements OnInit {
   ];
 
   // ================= INIT =================
-  ngOnInit(): void {
-    this.emailsInscrits = JSON.parse(localStorage.getItem('emailsJeu') || '{}');
+ngOnInit(): void {
+  this.emailsInscrits = JSON.parse(localStorage.getItem('emailsJeu') || '{}');
 
-    // Si on arrive avec un lien de parrainage ?invite=TOKEN
-    const urlParams = new URLSearchParams(window.location.search);
-    const tokenInvite = urlParams.get('invite');
+  // Si on arrive avec un lien de parrainage ?invite=TOKEN
+  const urlParams = new URLSearchParams(window.location.search);
+  const tokenInvite = urlParams.get('invite');
 
-    if (tokenInvite) {
-      // Trouver joueur par token et incrémenter son compteur d'invites (si < max)
-      for (let mail in this.emailsInscrits) {
-        const joueur = this.emailsInscrits[mail];
-        if (!joueur) continue;
-        if (joueur.token === tokenInvite) {
-          const invites = parseInt(localStorage.getItem(mail + '_invites') || '0', 10);
-          if (invites < this.maxBonus) {
-            const newInvites = invites + 1;
-            localStorage.setItem(mail + '_invites', newInvites.toString());
-            // Optionnel : accorder immédiatement une tentative au parrainé ? ici on n'en donne pas.
-            this.majCompteur(mail);
-          }
-          break;
+  if (tokenInvite) {
+    // Trouver le joueur par son token
+    for (let mail in this.emailsInscrits) {
+      const joueur = this.emailsInscrits[mail];
+      if (!joueur) continue;
+
+      if (joueur.token === tokenInvite) {
+        // Vérifier combien d'amis ont déjà été invités
+        const invites = parseInt(localStorage.getItem(mail + '_invites') || '0', 10);
+
+        if (invites < this.maxBonus) {
+          const newInvites = invites + 1;
+          localStorage.setItem(mail + '_invites', newInvites.toString());
+
+          // Accorder une tentative seulement à ce moment-là
+          joueur.tentatives = Math.max(0, joueur.tentatives - 1); // redonner une tentative
+          localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
+
+          // Mettre à jour compteur pour affichage
+          this.majCompteur(mail);
         }
+
+        // Optionnel : afficher un message si l'ami vient de s'inscrire
+        alert(`🎉 Un ami vous a rejoint ! Vous pouvez maintenant rejouer.`);
+
+        break;
       }
     }
   }
+}
+
 
   // ================= INSCRIPTION =================
   afficherFormulaire(): void {
@@ -212,48 +225,46 @@ export class JeuComponent implements OnInit {
     }
   }
 
-  inviterAmi(): void {
-    const emailLower = this.email.toLowerCase();
-    const joueur = this.emailsInscrits[emailLower];
+inviterAmi(): void {
+  const emailLower = this.email.toLowerCase();
+  const joueur = this.emailsInscrits[emailLower];
 
-    if (!joueur) {
-      alert('Veuillez vous inscrire avant d’inviter un ami.');
-      return;
-    }
-
-    let invites = parseInt(localStorage.getItem(emailLower + '_invites') || '0', 10);
-
-    if (invites >= this.maxBonus) {
-      alert('❌ Vous avez déjà invité 3 amis. Plus de seconde chance possible.');
-      this.afficherBonus = false;
-      return;
-    }
-
-    // Générer un lien de parrainage
-    this.lienParrainage = `${window.location.href.split('?')[0]}?invite=${joueur.token}`;
-
-    // Copier dans le presse-papiers si possible
-    navigator.clipboard?.writeText(this.lienParrainage).then(() => {
-      alert(`📩 Lien copié ! Partagez-le avec un ami pour obtenir une seconde chance.\n\n${this.lienParrainage}`);
-    }).catch(() => {
-      // fallback si clipboard non disponible
-      alert(`📩 Partagez ce lien avec un ami pour obtenir une seconde chance :\n\n${this.lienParrainage}`);
-    });
-
-    // Incrémenter le compteur d'invitations côté parrain
-    invites++;
-    localStorage.setItem(emailLower + '_invites', invites.toString());
-
-    // Redonner une tentative (on décrémente le compteur de tentatives pour permettre rejouer)
-    joueur.tentatives = Math.max(0, joueur.tentatives - 1);
-    localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
-
-    // Relancer une partie
-    this.nouvellePartie();
-    this.startTimer();
-    this.afficherBonus = false;
-    this.majCompteur(emailLower);
+  if (!joueur) {
+    alert('Veuillez vous inscrire avant d’inviter un ami.');
+    return;
   }
+
+  let invites = parseInt(localStorage.getItem(emailLower + '_invites') || '0', 10);
+
+  if (invites >= this.maxBonus) {
+    alert('❌ Vous avez déjà invité 3 amis. Plus de seconde chance possible.');
+    this.afficherBonus = false;
+    return;
+  }
+
+  // Générer un lien de parrainage
+  this.lienParrainage = `${window.location.href.split('?')[0]}?invite=${joueur.token}`;
+
+  // Copier dans le presse-papiers si possible
+  navigator.clipboard?.writeText(this.lienParrainage).then(() => {
+    alert(`📩 Lien copié ! Partagez-le avec un ami pour obtenir une seconde chance.\n\n${this.lienParrainage}`);
+  }).catch(() => {
+    alert(`📩 Partagez ce lien avec un ami pour obtenir une seconde chance :\n\n${this.lienParrainage}`);
+  });
+
+  // Marquer que l’invitation a été envoyée
+  this.invitationEnvoyee = true;
+
+  // Afficher un message mais **ne pas relancer le chrono ni le code**
+  this.resultatMessage = '✅ Invitation envoyée ! Votre seconde chance sera disponible quand l’ami s’inscrira.';
+  this.resultColor = 'blue';
+  this.afficherBonus = false;
+
+  // Incrémenter le compteur d'invitations côté parrain
+  invites++;
+  localStorage.setItem(emailLower + '_invites', invites.toString());
+}
+
 
   startTimer(): void {
     clearInterval(this.timer);
