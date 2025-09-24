@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import emailjs from '@emailjs/browser';
+import { environment } from '../../environments/environment';
+
 
 interface Joueur {
   prenom: string;
@@ -34,7 +36,7 @@ export class JeuComponent implements OnInit {
   chrono: number = 40;
   timer!: ReturnType<typeof setInterval>;
   maxBonus: number = 3; // utilisé comme nombre max d'invitations
-  lettresGagnantes: string[] = ['X', 'D', 'F', 'Y', 'U'];
+  lettresGagnantes: string[] = ['X', 'D', 'W', 'Y', 'U'];
 
   // Joueur inscription
   prenom: string = '';
@@ -61,6 +63,9 @@ export class JeuComponent implements OnInit {
   resultatMessage: string = '';
   resultColor: string = 'black';
   lienParrainage: string = '';
+  afficherCode: boolean = true;
+  afficherChrono: boolean = true;
+
 
   avisGagnants: Avis[] = [
     { image: 'assets/images/gagnant1.jpg', message: 'Super confortables, j’adore !', nom: 'Marie', ville: 'Montréal' },
@@ -69,43 +74,41 @@ export class JeuComponent implements OnInit {
   ];
 
   // ================= INIT =================
-ngOnInit(): void {
-  this.emailsInscrits = JSON.parse(localStorage.getItem('emailsJeu') || '{}');
+  ngOnInit(): void {
+    this.emailsInscrits = JSON.parse(localStorage.getItem('emailsJeu') || '{}');
 
-  // Si on arrive avec un lien de parrainage ?invite=TOKEN
-  const urlParams = new URLSearchParams(window.location.search);
-  const tokenInvite = urlParams.get('invite');
+    // Récupérer les invitations déjà envoyées par ce joueur
+    const invitationsEnvoyees = JSON.parse(localStorage.getItem('invitationsEnvoyees') || '{}');
 
-  if (tokenInvite) {
-    // Trouver le joueur par son token
-    for (let mail in this.emailsInscrits) {
-      const joueur = this.emailsInscrits[mail];
-      if (!joueur) continue;
+    // Vérifier si l'URL contient un token d'invitation
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenInvite = urlParams.get('invite');
 
-      if (joueur.token === tokenInvite) {
-        // Vérifier combien d'amis ont déjà été invités
-        const invites = parseInt(localStorage.getItem(mail + '_invites') || '0', 10);
+    if (tokenInvite) {
+      for (let mail in this.emailsInscrits) {
+        const joueur = this.emailsInscrits[mail];
+        if (!joueur) continue;
 
-        if (invites < this.maxBonus) {
-          const newInvites = invites + 1;
-          localStorage.setItem(mail + '_invites', newInvites.toString());
+        if (joueur.token === tokenInvite) {
+          const invites = parseInt(localStorage.getItem(mail + '_invites') || '0', 10);
+          if (invites < this.maxBonus) {
+            const newInvites = invites + 1;
+            localStorage.setItem(mail + '_invites', newInvites.toString());
+            joueur.tentatives = Math.max(0, joueur.tentatives - 1);
+            localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
+            this.majCompteur(mail);
 
-          // Accorder une tentative seulement à ce moment-là
-          joueur.tentatives = Math.max(0, joueur.tentatives - 1); // redonner une tentative
-          localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
-
-          // Mettre à jour compteur pour affichage
-          this.majCompteur(mail);
+            // Afficher un message même si la page a été fermée et rouverte
+            if (!invitationsEnvoyees[mail]) {
+              alert(`🎉 Un ami vous a rejoint ! Vous pouvez maintenant rejouer.`);
+            }
+          }
+          break;
         }
-
-        // Optionnel : afficher un message si l'ami vient de s'inscrire
-        alert(`🎉 Un ami vous a rejoint ! Vous pouvez maintenant rejouer.`);
-
-        break;
       }
     }
   }
-}
+
 
 
   // ================= INSCRIPTION =================
@@ -165,6 +168,8 @@ ngOnInit(): void {
   }
 
   nouvellePartie(): void {
+    this.afficherCode = true;
+    this.afficherChrono = true;
     this.codeComplet = this.genererCode();
     let codeArray = this.codeComplet.split('');
 
@@ -201,6 +206,10 @@ ngOnInit(): void {
       this.resultColor = 'green';
       this.chrono = 0;
 
+      // Masquer le code et le chrono
+      this.afficherCode = false;
+      this.afficherChrono = false;
+
       setTimeout(() => document.getElementById('btnContinuer')?.scrollIntoView({ behavior: 'smooth' }), 300);
 
     } else {
@@ -225,45 +234,54 @@ ngOnInit(): void {
     }
   }
 
-inviterAmi(): void {
-  const emailLower = this.email.toLowerCase();
-  const joueur = this.emailsInscrits[emailLower];
+  inviterAmi(): void {
+    const emailLower = this.email.toLowerCase();
+    const joueur = this.emailsInscrits[emailLower];
 
-  if (!joueur) {
-    alert('Veuillez vous inscrire avant d’inviter un ami.');
-    return;
-  }
+    if (!joueur) {
+      alert('Veuillez vous inscrire avant d’inviter un ami.');
+      return;
+    }
 
-  let invites = parseInt(localStorage.getItem(emailLower + '_invites') || '0', 10);
+    let invites = parseInt(localStorage.getItem(emailLower + '_invites') || '0', 10);
 
-  if (invites >= this.maxBonus) {
-    alert('❌ Vous avez déjà invité 3 amis. Plus de seconde chance possible.');
+    if (invites >= this.maxBonus) {
+      alert('❌ Vous avez déjà invité 3 amis. Plus de seconde chance possible.');
+      this.afficherBonus = false;
+      return;
+    }
+
+
+    // ← Ici, générer le de parrainage lien avec l'URL correcte (baseUrl)
+    this.lienParrainage = `${environment.baseUrl}?invite=${joueur.token}`;
+
+    // Copier dans le presse-papiers si possible
+    navigator.clipboard?.writeText(this.lienParrainage).then(() => {
+      alert(`📩 Lien copié ! Partagez-le avec un ami pour obtenir une seconde chance.\n\n${this.lienParrainage}`);
+    }).catch(() => {
+      alert(`📩 Partagez ce lien avec un ami pour obtenir une seconde chance :\n\n${this.lienParrainage}`);
+    });
+
+    // Sauvegarder que le joueur a envoyé une invitation
+    const invitationsEnvoyees = JSON.parse(localStorage.getItem('invitationsEnvoyees') || '{}');
+    invitationsEnvoyees[emailLower] = true;
+    localStorage.setItem('invitationsEnvoyees', JSON.stringify(invitationsEnvoyees));
+
+    this.invitationEnvoyee = true;
+    this.resultatMessage = '✅ Invitation envoyée ! Votre seconde chance sera disponible quand l’ami s’inscrira.';
+
+    // Marquer que l’invitation a été envoyée
+    this.invitationEnvoyee = true;
+
+    // Afficher un message mais **ne pas relancer le chrono ni le code**
+    this.resultatMessage = '✅ Invitation envoyée ! Votre seconde chance sera disponible quand l’ami s’inscrira.';
+    this.resultColor = 'blue';
     this.afficherBonus = false;
-    return;
+
+    // Incrémenter le compteur d'invitations côté parrain
+    invites++;
+    localStorage.setItem(emailLower + '_invites', invites.toString());
   }
-
-  // Générer un lien de parrainage
-  this.lienParrainage = `${window.location.href.split('?')[0]}?invite=${joueur.token}`;
-
-  // Copier dans le presse-papiers si possible
-  navigator.clipboard?.writeText(this.lienParrainage).then(() => {
-    alert(`📩 Lien copié ! Partagez-le avec un ami pour obtenir une seconde chance.\n\n${this.lienParrainage}`);
-  }).catch(() => {
-    alert(`📩 Partagez ce lien avec un ami pour obtenir une seconde chance :\n\n${this.lienParrainage}`);
-  });
-
-  // Marquer que l’invitation a été envoyée
-  this.invitationEnvoyee = true;
-
-  // Afficher un message mais **ne pas relancer le chrono ni le code**
-  this.resultatMessage = '✅ Invitation envoyée ! Votre seconde chance sera disponible quand l’ami s’inscrira.';
-  this.resultColor = 'blue';
-  this.afficherBonus = false;
-
-  // Incrémenter le compteur d'invitations côté parrain
-  invites++;
-  localStorage.setItem(emailLower + '_invites', invites.toString());
-}
 
 
   startTimer(): void {
@@ -333,7 +351,7 @@ Merci d'avoir participé et à très vite,
 L'équipe Ferargile 🧦
 `;
 
-    const templateParams = {
+    const templateClientParams = {
       to_email: this.email,
       prenom: this.prenom,
       adresse: this.adresse,
@@ -342,14 +360,35 @@ L'équipe Ferargile 🧦
       message: messageLivraison
     };
 
-    emailjs.send(
-      'service_9od4cf4',
-      'template_i6kkf43',
-      templateParams,
-      '4NHyPfpmCWsVhqyAO'
-    )
-      .then(() => console.log('Email envoyé !'))
-      .catch((err) => console.error('Erreur EmailJS:', err));
+     // 1️⃣ Envoyer au client
+  emailjs.send(
+    'service_9od4cf4',
+    'template_client',  // template client
+    templateClientParams,
+    '4NHyPfpmCWsVhqyAO'
+  )
+  .then(() => console.log('Email client envoyé !'))
+  .catch((err) => console.error('Erreur EmailJS client:', err));
+
+  // 2️⃣ Envoyer à l'admin
+  const templateAdminParams = {
+    prenom: this.prenom,
+    emailClient: this.email,
+    adresse: this.adresse,
+    ville: this.ville,
+    codePostal: this.codePostal,
+    message: `Le client ${this.prenom} (${this.email}) a reçu son email de confirmation.`
+  };
+
+  emailjs.send(
+    'service_9od4cf4',
+    'template_admin',   // template admin
+    templateAdminParams,
+    '4NHyPfpmCWsVhqyAO'
+  )
+  .then(() => console.log('Notification admin envoyée !'))
+  .catch((err) => console.error('Erreur EmailJS admin:', err));
+
   }
 
   // ================== PARTAGE ==================
