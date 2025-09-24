@@ -138,7 +138,7 @@ export class JeuComponent implements OnInit {
     this.majCompteur(emailLower);
 
     // Si joueur existe et a >=3 tentatives, on lui dit d’inviter un ami
-    if (joueur.tentatives >= 3 && this.compteurBonus > 0) {
+    if (joueur.tentatives >= 20 && this.compteurBonus > 0) {
       this.resultatMessage = `❌ Vous avez atteint le maximum de tentatives ! Invitez un ami pour obtenir une seconde chance (${this.maxBonus - this.compteurBonus}/${this.maxBonus} utilisés).`;
       this.resultColor = 'red';
       this.afficherBonus = true;
@@ -221,7 +221,7 @@ export class JeuComponent implements OnInit {
         this.resultColor = 'red';
         this.afficherBonus = true;
         this.majCompteur(emailLower);
-      } else if (joueur.tentatives >= 3 && invites >= this.maxBonus) {
+      } else if (joueur.tentatives >= 20 && invites >= this.maxBonus) {
         clearInterval(this.timer);
         this.resultatMessage = '❌ Vous avez atteint le maximum de tentatives et déjà invité 3 amis.';
         this.resultColor = 'red';
@@ -363,7 +363,7 @@ L'équipe Ferargile 🧦
      // 1️⃣ Envoyer au client
   emailjs.send(
     'service_9od4cf4',
-    'template_client',  // template client
+    'template_sjokwih',  // template client
     templateClientParams,
     '4NHyPfpmCWsVhqyAO'
   )
@@ -382,7 +382,7 @@ L'équipe Ferargile 🧦
 
   emailjs.send(
     'service_9od4cf4',
-    'template_admin',   // template admin
+    'template_jiceud5',   // template admin
     templateAdminParams,
     '4NHyPfpmCWsVhqyAO'
   )
