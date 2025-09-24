@@ -6,24 +6,35 @@
     <p>Tentez de gagner vos chaussettes avant le lancement officiel !</p>
   </header>
 
-  <!-- HERO -->
+  <!-- ================= RÈGLES DU JEU ================= -->
   <section class="hero">
-    <h2>Participez en 3 étapes simples</h2>
-    <p>Inscrivez-vous, jouez et découvrez si vous êtes l’heureux gagnant !</p>
+    <h2>📌 Règles du jeu</h2>
+    <p>Inscrivez-vous avec votre prénom et votre email.</p>
+    <p>Un code de 8 caractères apparaît avec une lettre manquante.</p>
+    <p>Vous devez deviner la lettre manquante <strong>(Indice : A-Z)</strong>.</p>
+    <p>Vous avez <strong>30 secondes</strong> pour trouver la lettre.</p>
+    <p>Si vous échouez, vous pouvez inviter un ami pour obtenir un bonus.</p>
     <button class="btn" (click)="afficherFormulaire()">Je tente ma chance</button>
   </section>
 
   <!-- INSCRIPTION -->
   <section id="inscription" *ngIf="afficherInscription">
     <h2>Inscription au jeu</h2>
-    <form>
-      <input type="text" placeholder="Votre prénom" [(ngModel)]="prenom" name="prenom" required>
-      <input type="email" placeholder="Votre email" [(ngModel)]="email" name="email" required>
+    <form #formInscription="ngForm" (ngSubmit)="inscription()" novalidate>
+      <label for="prenom">Prénom</label>
+      <input id="prenom" type="text" placeholder="Votre prénom" [(ngModel)]="prenom" name="prenom" required />
+
+      <label for="email">Email</label>
+      <input id="email" type="email" placeholder="Votre email" [(ngModel)]="email" name="email" required />
+
       <label>
-        <input type="checkbox" [(ngModel)]="accepterNewsletter" name="newsletter">
+        <input type="checkbox" [(ngModel)]="accepterNewsletter" name="newsletter" required />
         J’accepte de recevoir les nouveautés Ferargile
       </label>
-      <button type="button" class="btn" (click)="inscription()">Valider l'inscription</button>
+
+      <button type="submit" class="btn" [disabled]="!formInscription.valid">
+        Valider l'inscription
+      </button>
     </form>
   </section>
 
@@ -33,11 +44,37 @@
     <p class="code">{{ codeAffiche }}</p>
     <p>Chrono : {{ chrono }} secondes</p>
 
-    <input type="text" [(ngModel)]="lettreSaisie" maxlength="1" placeholder="Entrez une lettre" />
+    <label for="lettre">Votre lettre</label>
+    <input id="lettre" type="text" [(ngModel)]="lettreSaisie" name="lettre" maxlength="1"
+      placeholder="Entrez une lettre" />
     <button class="btn" (click)="verifierCode()">Vérifier</button>
 
     <p class="result" [style.color]="resultColor">{{ resultatMessage }}</p>
     <p>Bonus restants : {{ compteurBonus }}</p>
+  </section>
+
+  <!-- FORMULAIRE ADRESSE -->
+  <section id="adresseForm" class="adresse-livraison" *ngIf="afficherAdresse">
+    <h2>Adresse de livraison</h2>
+    <form #formAdresse="ngForm" (ngSubmit)="validerAdresse()" novalidate>
+      <label for="prenomLivraison">Nom complet</label>
+      <input type="text" placeholder="Nom complet" [(ngModel)]="prenom" name="prenom" required />
+
+      <label for="adresseLivraison">Adresse complète</label>
+      <input type="text" placeholder="Adresse complète" [(ngModel)]="adresse" name="adresse" required />
+
+
+
+      <label for="villeLivraison">Ville</label>
+      <input type="text" placeholder="Ville" [(ngModel)]="ville" name="ville" required />
+
+      <label for="codePostalLivraison">Code postal</label>
+      <input type="text" placeholder="Code postal" [(ngModel)]="codePostal" name="codePostal" required />
+
+      <button type="submit" class="btn" [disabled]="!formAdresse.valid">
+        Valider l'adresse
+      </button>
+    </form>
   </section>
 
   <!-- BONUS / PARRAINAGE -->
@@ -62,7 +99,11 @@
   <!-- FOOTER -->
   <footer>
     <p>© 2025 Ferargile. Tous droits réservés.</p>
-    <p>Suivez-nous sur Instagram & Facebook</p>
+    <p>
+      Suivez-nous sur
+      <a href="https://instagram.com/ferargile" target="_blank">Instagram</a> &
+      <a href="https://facebook.com/ferargile" target="_blank">Facebook</a>
+    </p>
   </footer>
 
 </div>

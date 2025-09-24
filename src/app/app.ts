@@ -11,4 +11,6 @@ import { JeuComponent } from './jeu/jeu';
     templateUrl: './app.html',
     styleUrls: ['./app.css']
 })
-export class AppComponent { }
+export class AppComponent { 
+    
+}
