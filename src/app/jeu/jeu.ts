@@ -35,8 +35,9 @@ export class JeuComponent implements OnInit {
   lettreSaisie: string = '';
   chrono: number = 40;
   timer!: ReturnType<typeof setInterval>;
-  maxBonus: number = 3; // utilisé comme nombre max d'invitations
-  lettresGagnantes: string[] = ['X', 'D', 'W', 'Y', 'U'];
+  maxBonus: number = 3; // utilisé comme nombre max d'invitations validées
+  invites: number = 0;
+  lettresGagnantes: string[] = ['X', 'I', 'W', 'Y', 'U'];
 
   // Joueur inscription
   prenom: string = '';
@@ -53,19 +54,26 @@ export class JeuComponent implements OnInit {
   // Stockage local des joueurs
   emailsInscrits: { [key: string]: Joueur } = {};
 
-  // Affichage
+  // Affichage / états
   afficherInscription: boolean = false;
   afficherJeu: boolean = false;
   afficherBonus: boolean = false;
   bonusDisponible: boolean = true;
   afficherAdresse: boolean = false;
-  compteurBonus: number = 0; // nombre d'invitations restantes (maxBonus - invites)
+  compteurBonus: number = 0; // number of remaining valid invites to reach maxBonus
   resultatMessage: string = '';
   resultColor: string = 'black';
+  // NOTE: lienParrainage n'est PAS affiché sur la page selon ta demande
   lienParrainage: string = '';
   afficherCode: boolean = true;
   afficherChrono: boolean = true;
 
+  // Nouveau : empêcher plusieurs soumissions dans la même manche
+  tentativeEnCours: boolean = false;
+
+  // Nouveau : stocker les e-mails des amis validés pour chaque parrain
+  // sauvegardés en localStorage sous clé: sponsor + '_friends' => JSON array
+  // ex: localStorage.getItem('alice@example.com_friends') => '["ami1@ex","ami2@ex"]'
 
   avisGagnants: Avis[] = [
     { image: 'assets/images/gagnant1.jpg', message: 'Super confortables, j’adore !', nom: 'Marie', ville: 'Montréal' },
@@ -77,39 +85,59 @@ export class JeuComponent implements OnInit {
   ngOnInit(): void {
     this.emailsInscrits = JSON.parse(localStorage.getItem('emailsJeu') || '{}');
 
-    // Récupérer les invitations déjà envoyées par ce joueur
-    const invitationsEnvoyees = JSON.parse(localStorage.getItem('invitationsEnvoyees') || '{}');
-
-    // Vérifier si l'URL contient un token d'invitation
+    // Vérifier si l'URL contient un token d'invitation (lorsqu'un ami clique sur le lien et s'inscrit)
     const urlParams = new URLSearchParams(window.location.search);
     const tokenInvite = urlParams.get('invite');
 
     if (tokenInvite) {
+      // Si la page est visitée avec ?invite=TOKEN, on suppose que la personne s'inscrit (ou est déjà inscrite).
+      // On parcourt les joueurs pour trouver le parrain (celui dont le token correspond).
       for (let mail in this.emailsInscrits) {
         const joueur = this.emailsInscrits[mail];
         if (!joueur) continue;
 
         if (joueur.token === tokenInvite) {
-          const invites = parseInt(localStorage.getItem(mail + '_invites') || '0', 10);
-          if (invites < this.maxBonus) {
-            const newInvites = invites + 1;
-            localStorage.setItem(mail + '_invites', newInvites.toString());
-            joueur.tentatives = Math.max(0, joueur.tentatives - 1);
-            localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
-            this.majCompteur(mail);
+          // Si un visiteur (ami) vient avec ce token et s'inscrit (côté front on suppose qu'il a fourni son e-mail),
+          // on ne peut pas forcer une inscription automatique : il faudra appeler cette logique depuis la page d'inscription.
+          // Mais on peut -- si l'ami a un param 'registerEmail' dans l'URL (ex: ?invite=...&registerEmail=ami@ex) -- le traiter.
+          const registeringEmail = urlParams.get('registerEmail');
+          if (registeringEmail) {
+            const friendLower = registeringEmail.toLowerCase();
+            // ne pas compter si friend est le même que le parrain
+            if (friendLower === mail) {
+              // ne rien faire
+            } else {
+              // charger la liste d'amis validés du parrain
+              const keyFriends = mail + '_friends';
+              const friendsList: string[] = JSON.parse(localStorage.getItem(keyFriends) || '[]');
 
-            // Afficher un message même si la page a été fermée et rouverte
-            if (!invitationsEnvoyees[mail]) {
-              alert(`🎉 Un ami vous a rejoint ! Vous pouvez maintenant rejouer.`);
+              // si l'ami n'était pas déjà compté ET l'ami existe comme utilisateur (inscrit dans emailsJeu),
+              // alors on l'ajoute à la liste du parrain et on incrémente le compteur d'invites si < maxBonus.
+              // L'intention : un ami doit **s'inscrire** après avoir reçu le lien pour être compté.
+              if (!friendsList.includes(friendLower)) {
+                // on vérifie que l'ami est bien inscrit (a un compte)
+                if (this.emailsInscrits[friendLower]) {
+                  friendsList.push(friendLower);
+                  localStorage.setItem(keyFriends, JSON.stringify(friendsList));
+                  // mettre à jour le nombre d'invites validées
+                  const invites = parseInt(localStorage.getItem(mail + '_invites') || '0', 10);
+                  if (invites < this.maxBonus) {
+                    localStorage.setItem(mail + '_invites', (invites + 1).toString());
+                  }
+                  // prévenir le parrain (alerte) si la page est chargée par le parrain après l'évènement
+                  // (ici on ne fait pas d'alert automatique pour ne pas déranger)
+                }
+              }
             }
+          } else {
+            // Si l'ami n'a pas fourni registerEmail, on gère le cas existant (par ex: le parrain clique son lien)
+            // Rien d'autre à faire
           }
           break;
         }
       }
     }
   }
-
-
 
   // ================= INSCRIPTION =================
   afficherFormulaire(): void {
@@ -128,18 +156,21 @@ export class JeuComponent implements OnInit {
       joueur = this.emailsInscrits[emailLower]; // ← récupère l'objet créé
       localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
 
-      // initialiser invites si absent
+      // initialiser invites et friends si absent
       if (!localStorage.getItem(emailLower + '_invites')) {
         localStorage.setItem(emailLower + '_invites', '0');
+      }
+      if (!localStorage.getItem(emailLower + '_friends')) {
+        localStorage.setItem(emailLower + '_friends', JSON.stringify([]));
       }
     }
 
     this.joueurActuel = joueur; // maintenant joueurActuel est bien défini
     this.majCompteur(emailLower);
 
-    // Si joueur existe et a >=3 tentatives, on lui dit d’inviter un ami
-    if (joueur.tentatives >= 20 && this.compteurBonus > 0) {
-      this.resultatMessage = `❌ Vous avez atteint le maximum de tentatives ! Invitez un ami pour obtenir une seconde chance (${this.maxBonus - this.compteurBonus}/${this.maxBonus} utilisés).`;
+    // Si joueur existe et a >=1 tentatives, on lui dit d’inviter un ami (logique conservée)
+    if (joueur.tentatives >= 1 && this.compteurBonus > 0) {
+      this.resultatMessage = `❌ Vous avez atteint le maximum de tentatives ! Invitez 3 amis pour obtenir une seconde chance (${this.maxBonus - this.compteurBonus}/${this.maxBonus} utilisés).`;
       this.resultColor = 'red';
       this.afficherBonus = true;
       this.afficherJeu = true;
@@ -159,6 +190,7 @@ export class JeuComponent implements OnInit {
     const invites = parseInt(localStorage.getItem(email + '_invites') || '0', 10);
     const restant = this.maxBonus - invites;
     this.compteurBonus = restant >= 0 ? restant : 0;
+    this.bonusDisponible = invites < this.maxBonus;
   }
 
   // ================== LOGIQUE DU JEU ==================
@@ -185,9 +217,15 @@ export class JeuComponent implements OnInit {
     this.resultatMessage = '';
     this.lettreSaisie = '';
     this.afficherBonus = false;
+
+    // autoriser une seule soumission pendant la manche
+    this.tentativeEnCours = true;
   }
 
   verifierCode(): void {
+    // empêcher plusieurs soumissions dans la même manche
+    if (!this.tentativeEnCours) return;
+
     const input = this.lettreSaisie.toUpperCase();
     const emailLower = this.email.toLowerCase();
     const joueur = this.joueurActuel;
@@ -197,6 +235,8 @@ export class JeuComponent implements OnInit {
       return;
     }
 
+    // marquer la tentative comme consommée pour la manche actuelle
+    this.tentativeEnCours = false;
     joueur.tentatives++;
     localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
 
@@ -209,84 +249,120 @@ export class JeuComponent implements OnInit {
       // Masquer le code et le chrono
       this.afficherCode = false;
       this.afficherChrono = false;
+      this.invitationEnvoyee = true;   // 👉 masque chrono + code
+
+      // notifier admin (toujours)
+      this.envoyerNotifAdmin(`Le joueur ${joueur.prenom} (${emailLower}) a gagné le jeu.`);
 
       setTimeout(() => document.getElementById('btnContinuer')?.scrollIntoView({ behavior: 'smooth' }), 300);
 
     } else {
-      const invites = parseInt(localStorage.getItem(emailLower + '_invites') || '0', 10);
+      // mauvaise lettre -> envoyer automatiquement l'email d'invitation au joueur
+      this.resultatMessage = '❌ Mauvais choix... un email d\'invitation vous a été envoyé pour débloquer une seconde chance (si 3 amis s\'inscrivent).';
+      this.resultColor = 'red';
+      this.afficherCode = false;
+      this.afficherChrono = false;
 
-      if (joueur.tentatives >= 3 && invites < this.maxBonus) {
-        // Afficher message + bouton inviter
-        this.resultatMessage = `❌ Vous avez atteint le maximum de tentatives ! Invitez un ami pour rejouer (${invites}/${this.maxBonus} invités).`;
-        this.resultColor = 'red';
-        this.afficherBonus = true;
-        this.majCompteur(emailLower);
-      } else if (joueur.tentatives >= 20 && invites >= this.maxBonus) {
-        clearInterval(this.timer);
-        this.resultatMessage = '❌ Vous avez atteint le maximum de tentatives et déjà invité 3 amis.';
-        this.resultColor = 'red';
-        this.codeAffiche = '---';
-        this.afficherBonus = false;
-      } else {
-        this.resultatMessage = '❌ Mauvais choix... retentez votre chance !';
-        this.resultColor = 'red';
-      }
+
+      // on envoie le mail d'invitation au joueur (il devra l'envoyer à 3 amis)
+      this.envoyerInvitationAuJoueur(emailLower);
+
+      // notifier admin (toujours)
+      this.envoyerNotifAdmin(`Le joueur ${joueur.prenom} (${emailLower}) a échoué une tentative.`);
+
+      // Afficher la zone bonus si des invitations sont encore possibles (mais le lien n'est PAS affiché)
+      this.afficherBonus = true;
+      this.majCompteur(emailLower);
     }
   }
 
-  inviterAmi(): void {
-    const emailLower = this.email.toLowerCase();
-    const joueur = this.emailsInscrits[emailLower];
+  // Envoi d'un email d'invitation **au joueur** contenant le lien (il devra le forwarder à 3 amis)
+  envoyerInvitationAuJoueur(emailPlayerLower: string): void {
+    const joueur = this.emailsInscrits[emailPlayerLower];
+    if (!joueur) return;
 
-    if (!joueur) {
+    // construire le lien d'invitation (ne PAS l'afficher sur la page)
+    const lien = `${environment.baseUrl}?invite=${encodeURIComponent(joueur.token)}`;
+
+    // Préparer params template - adapt to your EmailJS template fields
+    const templateParams = {
+      to_email: emailPlayerLower,
+      prenom: joueur.prenom,
+      lien_parrainage: lien,
+      message: `Bonjour ${joueur.prenom},\n\nMerci d'avoir joué ! Pour obtenir une seconde chance, 
+      veuillez transférer ce message et ce lien d'invitation à 3 amis différents. 
+      Quand chacun d'eux s'inscrira via le lien, vous recevrez automatiquement la seconde tentative.\n\nLien (à transférer) : ${lien}`
+    };
+
+    // Envoi au joueur
+    emailjs.send(
+      'service_9od4cf4',
+      'template_dj7cys6', // <<--- adapte ce nom à ton template EmailJS
+      templateParams,
+      '4NHyPfpmCWsVhqyAO'
+    )
+      .then(() => {
+        console.log('Email d\'invitation envoyé au joueur.');
+        // marquer qu'une invitation a été envoyée (localStorage) mais on ne révèle pas le lien
+        const invitationsEnvoyees = JSON.parse(localStorage.getItem('invitationsEnvoyees') || '{}');
+        invitationsEnvoyees[emailPlayerLower] = true;
+        localStorage.setItem('invitationsEnvoyees', JSON.stringify(invitationsEnvoyees));
+        this.invitationEnvoyee = true;
+      })
+      .catch((err) => console.error('Erreur EmailJS invitation joueur:', err));
+
+    // notifier admin qu'une invitation a été générée/envoyée
+    this.envoyerNotifAdmin(`Une invitation a été générée pour ${joueur.prenom} (${emailPlayerLower}) après échec/temps écoulé.`);
+  }
+
+  // Envoit toujours une notification à l'admin (utilisé sur victoire et défaite)
+  envoyerNotifAdmin(message: string): void {
+    const templateAdminParams = {
+      message: message
+    };
+
+    emailjs.send(
+      'service_9od4cf4',
+      'template_jiceud5',   // template admin (existant dans ton code)
+      templateAdminParams,
+      '4NHyPfpmCWsVhqyAO'
+    )
+      .then(() => console.log('Notification admin envoyée !'))
+      .catch((err) => console.error('Erreur EmailJS admin:', err));
+  }
+
+  // L'appel manuel d'inviterAmi n'affiche ni ne copie le lien ; il renvoie simplement l'email d'invitation au joueur (pour qu'il transfère).
+  inviterAmi(): void {
+    if (!this.joueurActuel) {
       alert('Veuillez vous inscrire avant d’inviter un ami.');
       return;
     }
-
-    let invites = parseInt(localStorage.getItem(emailLower + '_invites') || '0', 10);
-
+    const emailLower = this.email.toLowerCase();
+    // On garde la logique : si invites >= maxBonus alors plus possible
+    const invites = parseInt(localStorage.getItem(emailLower + '_invites') || '0', 10);
     if (invites >= this.maxBonus) {
-      alert('❌ Vous avez déjà invité 3 amis. Plus de seconde chance possible.');
+      alert('❌ Vous avez déjà obtenu les 3 invitations validées. Plus de seconde chance possible.');
       this.afficherBonus = false;
       return;
     }
 
+    // On renvoie au joueur l'email d'invitation pour qu'il le transfère (par ex. s'il l'a supprimé)
+    this.envoyerInvitationAuJoueur(emailLower);
 
-    // ← Ici, générer le de parrainage lien avec l'URL correcte (baseUrl)
-    this.lienParrainage = `${environment.baseUrl}?invite=${joueur.token}`;
-
-    // Copier dans le presse-papiers si possible
-    navigator.clipboard?.writeText(this.lienParrainage).then(() => {
-      alert(`📩 Lien copié ! Partagez-le avec un ami pour obtenir une seconde chance.\n\n${this.lienParrainage}`);
-    }).catch(() => {
-      alert(`📩 Partagez ce lien avec un ami pour obtenir une seconde chance :\n\n${this.lienParrainage}`);
-    });
-
-    // Sauvegarder que le joueur a envoyé une invitation
-    const invitationsEnvoyees = JSON.parse(localStorage.getItem('invitationsEnvoyees') || '{}');
-    invitationsEnvoyees[emailLower] = true;
-    localStorage.setItem('invitationsEnvoyees', JSON.stringify(invitationsEnvoyees));
-
-    this.invitationEnvoyee = true;
-    this.resultatMessage = '✅ Invitation envoyée ! Votre seconde chance sera disponible quand l’ami s’inscrira.';
-
-    // Marquer que l’invitation a été envoyée
-    this.invitationEnvoyee = true;
-
-    // Afficher un message mais **ne pas relancer le chrono ni le code**
-    this.resultatMessage = '✅ Invitation envoyée ! Votre seconde chance sera disponible quand l’ami s’inscrira.';
+    // Message utilisateur en UI (sans afficher le lien)
+    this.resultatMessage = '✅ Email d\'invitation (à transférer) renvoyé à votre adresse. Envoyez-le à 3 amis différents pour débloquer la seconde tentative.';
     this.resultColor = 'blue';
-    this.afficherBonus = false;
 
-    // Incrémenter le compteur d'invitations côté parrain
-    invites++;
-    localStorage.setItem(emailLower + '_invites', invites.toString());
+    // maj compteur
+    this.majCompteur(emailLower);
   }
-
 
   startTimer(): void {
     clearInterval(this.timer);
     this.chrono = 40;
+    this.afficherChrono = true;
+    this.afficherCode = true;
+    this.tentativeEnCours = true;
 
     this.timer = setInterval(() => {
       this.chrono--;
@@ -303,19 +379,29 @@ export class JeuComponent implements OnInit {
     if (!joueur) return;
 
     // Considérer comme tentative utilisée à la fin du chrono
-    joueur.tentatives++;
-    localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
+    // si une tentative était encore en cours
+    if (this.tentativeEnCours) {
+      this.tentativeEnCours = false;
+      joueur.tentatives++;
+      localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
+    }
 
+    // masquer code et chrono
     this.codeAffiche = '---';
-    this.resultatMessage = '⏰ Temps écoulé ! Invitez un ami pour rejouer.';
+    this.afficherCode = false;
+    this.afficherChrono = false;
+
+    this.resultatMessage = '⏰ Temps écoulé ! Un email d\'invitation vous a été envoyé — transférez-le à 3 amis pour rejouer.';
     this.resultColor = 'orange';
 
+    // envoyer l'email d'invitation automatiquement au joueur
+    this.envoyerInvitationAuJoueur(emailLower);
+
+    // notifier admin (toujours)
+    this.envoyerNotifAdmin(`Le joueur ${joueur.prenom} (${emailLower}) a perdu par temps écoulé.`);
+
+    // afficher zone bonus si encore possible, mais on **ne** montre pas de lien
     this.afficherBonus = true;
-    const invites = parseInt(localStorage.getItem(emailLower + '_invites') || '0', 10);
-    this.bonusDisponible = invites < this.maxBonus;
-    if (this.bonusDisponible) {
-      this.lienParrainage = `${window.location.href.split('?')[0]}?invite=${joueur.token}`;
-    }
     this.majCompteur(emailLower);
   }
 
@@ -338,17 +424,9 @@ export class JeuComponent implements OnInit {
 
   envoyerEmail(): void {
     const messageLivraison = `
-🎉 Félicitations ${this.prenom}, vous avez remporté notre jeu concours Ferargile !
-
-Votre cadeau sera envoyé à :
-${this.prenom}, ${this.adresse}, ${this.ville}, ${this.codePostal}
-
-Livraison estimée : 7 à 10 jours ouvrables.
-
-👉 À la veille du lancement officiel de notre boutique en ligne ferargile.com, recevez un code promo unique de -10% dès 60$.
-
-Merci d'avoir participé et à très vite,
-L'équipe Ferargile 🧦
+  Nous vous enverrons un mail de confirmation la veille de votre livraison.  
+  L’estimation de la durée de livraison est de 4 à 5 jours ouvrables.  
+  👉 Veuillez nous indiquer par courriel le lieu de dépôt souhaité afin de faciliter la remise de votre colis.
 `;
 
     const templateClientParams = {
@@ -360,63 +438,62 @@ L'équipe Ferargile 🧦
       message: messageLivraison
     };
 
-     // 1️⃣ Envoyer au client
-  emailjs.send(
-    'service_9od4cf4',
-    'template_sjokwih',  // template client
-    templateClientParams,
-    '4NHyPfpmCWsVhqyAO'
-  )
-  .then(() => console.log('Email client envoyé !'))
-  .catch((err) => console.error('Erreur EmailJS client:', err));
+    // 1️⃣ Envoyer au client
+    emailjs.send(
+      'service_9od4cf4',
+      'template_sjokwih',  // template client (existant)
+      templateClientParams,
+      '4NHyPfpmCWsVhqyAO'
+    )
+      .then(() => console.log('Email client envoyé !'))
+      .catch((err) => console.error('Erreur EmailJS client:', err));
 
-  // 2️⃣ Envoyer à l'admin
-  const templateAdminParams = {
-    prenom: this.prenom,
-    emailClient: this.email,
-    adresse: this.adresse,
-    ville: this.ville,
-    codePostal: this.codePostal,
-    message: `Le client ${this.prenom} (${this.email}) a reçu son email de confirmation.`
-  };
+    // 2️⃣ Envoyer à l'admin
+    const templateAdminParams = {
+      prenom: this.prenom,
+      emailClient: this.email,
+      adresse: this.adresse,
+      ville: this.ville,
+      codePostal: this.codePostal,
+      message: `Le client ${this.prenom} (${this.email}) a reçu son email de confirmation.`
+    };
 
-  emailjs.send(
-    'service_9od4cf4',
-    'template_jiceud5',   // template admin
-    templateAdminParams,
-    '4NHyPfpmCWsVhqyAO'
-  )
-  .then(() => console.log('Notification admin envoyée !'))
-  .catch((err) => console.error('Erreur EmailJS admin:', err));
-
+    emailjs.send(
+      'service_9od4cf4',
+      'template_jiceud5',   // template admin
+      templateAdminParams,
+      '4NHyPfpmCWsVhqyAO'
+    )
+      .then(() => console.log('Notification admin envoyée !'))
+      .catch((err) => console.error('Erreur EmailJS admin:', err));
   }
 
   // ================== PARTAGE ==================
+  // NOTE: Ne plus afficher le lien d'invitation sur la page. Les fonctions ci-dessous restent
+  // mais n'exposent pas le lien au visiteur. copierLien() ne divulgue rien.
   copierLien(): void {
-    if (!this.lienParrainage) {
-      alert('Aucun lien à copier.');
-      return;
-    }
-    navigator.clipboard.writeText(this.lienParrainage)
-      .then(() => alert('Lien copié ! Partagez-le avec vos amis.'));
+    alert('Par sécurité, le lien d\'invitation n’est pas affiché sur la page. Un e-mail contenant le lien vous a déjà été envoyé pour le transférer à vos amis.');
   }
 
   partager(reseau: 'facebook' | 'whatsapp' | 'twitter' | 'instagram'): void {
-    const url = encodeURIComponent(window.location.href.split('?')[0] + '?invite=' + encodeURIComponent(this.lienParrainage?.split('?invite=')[1] || ''));
-    const message = encodeURIComponent(`🎉 J’ai gagné mes chaussettes Ferargile ! Viens tenter ta chance 👉 ${window.location.href}`);
-
-    if (reseau === 'facebook') {
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
-    } else if (reseau === 'whatsapp') {
-      window.open(`https://api.whatsapp.com/send?text=${message}`, '_blank');
-    } else if (reseau === 'twitter') {
-      window.open(`https://twitter.com/intent/tweet?text=${message}`, '_blank');
-    } else if (reseau === 'instagram') {
-      alert('Instagram ne permet pas de partage direct, copiez le lien manuellement.');
-    }
+    alert('Le partage direct du lien d\'invitation n\'est pas disponible depuis la page. Utilisez l\'e-mail reçu pour transférer le lien à vos amis.');
   }
 
   rejouer(): void {
+    // Vérifier si le joueur a droit à une seconde tentative (3 amis validés)
+    const emailLower = this.email.toLowerCase();
+    const invites = parseInt(localStorage.getItem(emailLower + '_invites') || '0', 10);
+    // si invites < maxBonus => accès refusé tant que les 3 amis ne sont pas inscrits
+    if (invites < this.maxBonus) {
+      this.resultatMessage = `❌ Vous devez avoir 3 amis inscrits via votre lien pour rejouer. (${invites}/${this.maxBonus})`;
+      this.resultColor = 'red';
+      this.afficherCode = false;
+      this.afficherChrono = false;
+      this.afficherBonus = true;
+      return;
+    }
+
+    // si tout est ok, on réinitialise une manche
     this.nouvellePartie();
     this.startTimer();
   }

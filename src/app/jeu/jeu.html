@@ -13,7 +13,7 @@
     <p>Un code de 8 caractères apparaît avec une lettre manquante.</p>
     <p>Vous devez deviner la lettre manquante <strong>(Indice : choisir entre A-Z)</strong>.</p>
     <p>Vous avez <strong>40 secondes</strong> pour trouver la lettre.</p>
-    <p>Vous avez droit à 3 tentatives pendant le temps imparti.</p>
+    <p>Vous avez droit à une seul tentative pendant le temps imparti.</p>
     <p>Si vous échouez, vous pouvez inviter un ami pour obtenir un bonus.</p>
     <button class="btn" (click)="afficherFormulaire()">Je tente ma chance</button>
   </section>
@@ -41,14 +41,16 @@
 
   <!-- JEU -->
   <section id="jeuSection" class="jeu" *ngIf="afficherJeu">
-    <h2>Code à deviner</h2>
-    <p class="code">{{ codeAffiche }}</p>
-    <p *ngIf="chrono > 0">⏱ Chrono : {{ chrono }} secondes</p>
-
+    <h2 *ngIf="!invitationEnvoyee">Code à deviner</h2>
+    <!-- ✅ Affichage du code uniquement si pas d’invitation -->
+    <p class="code" *ngIf="!invitationEnvoyee">{{ codeAffiche }}</p>
+    <!-- ✅ Affichage du chrono uniquement si pas d’invitation -->
+    <p *ngIf="!invitationEnvoyee && chrono > 0">⏱ Chrono : {{ chrono }} secondes</p>
     <label for="lettre">Votre lettre</label>
+    <!-- 🔹 Désactivation du champ si tentativeEnCours === false -->
     <input id="lettre" type="text" [(ngModel)]="lettreSaisie" name="lettre" maxlength="1"
-      placeholder="Entrez une lettre" />
-    <button class="btn" (click)="verifierCode()">Vérifier</button>
+      placeholder="Entrez une lettre" [disabled]="!tentativeEnCours" />
+    <button class="btn" (click)="verifierCode()" [disabled]="!tentativeEnCours">Vérifier</button>
 
     <p class="result" [style.color]="resultColor">{{ resultatMessage }}</p>
 
@@ -64,7 +66,6 @@
   <button id="btnContinuer" *ngIf="resultColor === 'green' && !afficherAdresse" class="btn" (click)="passerAdresse()">
     Continuer ➡️
   </button>
-
 
   <!-- FORMULAIRE ADRESSE -->
   <section id="adresseForm" class="adresse-livraison" *ngIf="afficherAdresse">
@@ -90,16 +91,12 @@
 
   <!-- BONUS / PARRAINAGE -->
   <section id="bonusMessage" class="bonus" *ngIf="afficherBonus && bonusDisponible">
-    <p>Invitez vos amis avec ce lien :</p>
-    <!-- Lien cliquable -->
-    <a *ngIf="lienParrainage" [href]="lienParrainage" target="_blank">
-      {{ lienParrainage }}
-    </a>
-    <!-- Optionnel : input pour copier facilement -->
-    <!-- <div>
-      <input type="text" [value]="lienParrainage" readonly />
-      <button class="btn" (click)="copierLien()">Copier</button>
-    </div> -->
+    <h3>Invitez vos amis 🎉</h3>
+   
+  
+
+    <!-- 🔹 Affichage compteur amis validés -->
+    <p>Amis validés : {{ invites }}/{{ maxBonus }}</p>
   </section>
 
   <!-- AVIS GAGNANTS -->
@@ -119,8 +116,6 @@
     <p>© 2025 Ferargile. Tous droits réservés.</p>
     <p>
       Abonnez-vous sur
-      <!-- <a href="https://instagram.com/ferargile" target="_blank">Instagram</a> &
-      <a href="https://facebook.com/ferargile" target="_blank">Facebook</a> -->
       <a href="https://ferargile.com/" target="_blank">ferargile.com</a>
     </p>
   </footer>
