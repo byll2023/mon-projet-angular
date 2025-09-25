@@ -7,13 +7,13 @@
   </header>
 
   <!-- ================= RÈGLES DU JEU ================= -->
-  <section class="hero">
+  <section class="hero" *ngIf="!afficherInscription && !afficherJeu && !afficherAdresse">
     <h2>📌 Règles du jeu</h2>
     <p>Inscrivez-vous avec votre prénom et votre email.</p>
     <p>Un code de 8 caractères apparaît avec une lettre manquante.</p>
     <p>Vous devez deviner la lettre manquante <strong>(Indice : choisir entre A-Z)</strong>.</p>
     <p>Vous avez <strong>40 secondes</strong> pour trouver la lettre.</p>
-    <p>Vous avez droit à une seul tentative pendant le temps imparti.</p>
+    <p>Vous avez droit à une seule tentative pendant le temps imparti.</p>
     <p>Si vous échouez, vous pouvez inviter un ami pour obtenir un bonus.</p>
     <button class="btn" (click)="afficherFormulaire()">Je tente ma chance</button>
   </section>
@@ -42,24 +42,28 @@
   <!-- JEU -->
   <section id="jeuSection" class="jeu" *ngIf="afficherJeu">
     <h2 *ngIf="!invitationEnvoyee">Code à deviner</h2>
+
     <!-- ✅ Affichage du code uniquement si pas d’invitation -->
     <p class="code" *ngIf="!invitationEnvoyee">{{ codeAffiche }}</p>
+
     <!-- ✅ Affichage du chrono uniquement si pas d’invitation -->
     <p *ngIf="!invitationEnvoyee && chrono > 0">⏱ Chrono : {{ chrono }} secondes</p>
+
     <label for="lettre">Votre lettre</label>
-    <!-- 🔹 Désactivation du champ si tentativeEnCours === false -->
     <input id="lettre" type="text" [(ngModel)]="lettreSaisie" name="lettre" maxlength="1"
       placeholder="Entrez une lettre" [disabled]="!tentativeEnCours" />
     <button class="btn" (click)="verifierCode()" [disabled]="!tentativeEnCours">Vérifier</button>
 
     <p class="result" [style.color]="resultColor">{{ resultatMessage }}</p>
 
-    <!-- BOUTON BONUS SÉCURE -->
-    <div *ngIf="joueurActuel && joueurActuel.tentatives >= 3 && compteurBonus > 0">
-      <button (click)="inviterAmi()">🎁 Inviter un ami pour rejouer</button>
-      <p>Vous pouvez inviter jusqu’à 3 amis pour obtenir des secondes chances.</p>
+    <!-- BONUS : Inviter un ami -->
+    <div *ngIf="joueurActuel && joueurActuel.tentatives >= 1 && invites < maxBonus">
+      <button class="btn" (click)="inviterAmi()">🎁 Inviter un ami pour rejouer</button>
+      <p>Vous pouvez inviter jusqu’à {{ maxBonus }} amis pour obtenir des secondes chances.</p>
     </div>
-    <p>Bonus restants : {{ compteurBonus }}</p>
+
+    <!-- Affichage compteur -->
+    <p>Amis validés : {{ invites }}/{{ maxBonus }}</p>
   </section>
 
   <!-- Bouton qui apparaît uniquement si victoire -->
@@ -70,6 +74,16 @@
   <!-- FORMULAIRE ADRESSE -->
   <section id="adresseForm" class="adresse-livraison" *ngIf="afficherAdresse">
     <h2>Adresse de livraison</h2>
+    <p>
+      🎉 Félicitations {{ prenom }} ! Vous faites désormais partie des gagnants du jeu concours Ferargile.  
+      Votre cadeau sera bientôt expédié.  
+    </p>
+    <p>
+      Nous vous enverrons un mail de confirmation à la veille de votre livraison.  
+      Estimation de la durée de livraison : <strong>4 à 5 jours ouvrés</strong>.  
+      Veuillez nous indiquer par courriel le lieu du dépôt.
+    </p>
+
     <form #formAdresse="ngForm" (ngSubmit)="validerAdresse()" novalidate>
       <label for="prenomLivraison">Nom complet</label>
       <input type="text" placeholder="Nom complet" [(ngModel)]="prenom" name="prenom" required />
@@ -87,16 +101,6 @@
         Valider l'adresse
       </button>
     </form>
-  </section>
-
-  <!-- BONUS / PARRAINAGE -->
-  <section id="bonusMessage" class="bonus" *ngIf="afficherBonus && bonusDisponible">
-    <h3>Invitez vos amis 🎉</h3>
-   
-  
-
-    <!-- 🔹 Affichage compteur amis validés -->
-    <p>Amis validés : {{ invites }}/{{ maxBonus }}</p>
   </section>
 
   <!-- AVIS GAGNANTS -->
