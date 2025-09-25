@@ -46,7 +46,8 @@
     <p *ngIf="chrono > 0">⏱ Chrono : {{ chrono }} secondes</p>
 
     <label for="lettre">Votre lettre</label>
-    <input id="lettre" type="text" [(ngModel)]="lettreSaisie" name="lettre" maxlength="1" placeholder="Entrez une lettre" />
+    <input id="lettre" type="text" [(ngModel)]="lettreSaisie" name="lettre" maxlength="1"
+      placeholder="Entrez une lettre" />
     <button class="btn" (click)="verifierCode()">Vérifier</button>
 
     <p class="result" [style.color]="resultColor">{{ resultatMessage }}</p>
@@ -63,7 +64,7 @@
   <button id="btnContinuer" *ngIf="resultColor === 'green' && !afficherAdresse" class="btn" (click)="passerAdresse()">
     Continuer ➡️
   </button>
-  
+
 
   <!-- FORMULAIRE ADRESSE -->
   <section id="adresseForm" class="adresse-livraison" *ngIf="afficherAdresse">
@@ -90,8 +91,15 @@
   <!-- BONUS / PARRAINAGE -->
   <section id="bonusMessage" class="bonus" *ngIf="afficherBonus && bonusDisponible">
     <p>Invitez vos amis avec ce lien :</p>
-    <input type="text" [value]="lienParrainage" readonly />
-    <button class="btn" (click)="copierLien()">Copier</button>
+    <!-- Lien cliquable -->
+    <a *ngIf="lienParrainage" [href]="lienParrainage" target="_blank">
+      {{ lienParrainage }}
+    </a>
+    <!-- Optionnel : input pour copier facilement -->
+    <!-- <div>
+      <input type="text" [value]="lienParrainage" readonly />
+      <button class="btn" (click)="copierLien()">Copier</button>
+    </div> -->
   </section>
 
   <!-- AVIS GAGNANTS -->
@@ -113,7 +121,7 @@
       Abonnez-vous sur
       <!-- <a href="https://instagram.com/ferargile" target="_blank">Instagram</a> &
       <a href="https://facebook.com/ferargile" target="_blank">Facebook</a> -->
-       <a href="https://ferargile.com/" target="_blank">ferargile.com</a>
+      <a href="https://ferargile.com/" target="_blank">ferargile.com</a>
     </p>
   </footer>
 
