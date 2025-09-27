@@ -37,7 +37,21 @@ export class JeuComponent implements OnInit {
   maxBonus: number = 3;
   compteurBonus: number = 0;
   tentativeEnCours: boolean = false;
-  lettresGagnantes: string[] = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  // lettresGagnantes: string[] = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+  // ================== NOUVEAU : MOTS DIFFICILES ==================
+  motsDifficiles: string[] = [
+    "hippopotomonstrosesquippedaliophobie",
+    "anticonstitutionnellement",
+    "sphygmomanomètre",
+    "xylophone",
+    "pneumonoultramicroscopicsilicovolcanoconiose",
+    "chrysanthemum",
+    "triskaïdekaphobie",
+    "procrastination",
+    "rhombicosidodécaèdre",
+    "substantiellement"
+  ];
 
   // ================== VARIABLES JOUEUR ==================
   prenom: string = '';
@@ -61,6 +75,8 @@ export class JeuComponent implements OnInit {
   resultColor: string = 'black';
   afficherCode: boolean = true;
   afficherChrono: boolean = true;
+  victoire: boolean = false; 
+
 
   // ================== STOCKAGE LOCAL ==================
   emailsInscrits: { [key: string]: Joueur } = {};
@@ -109,6 +125,12 @@ export class JeuComponent implements OnInit {
     const emailLower = this.email.toLowerCase();
     return parseInt(localStorage.getItem(emailLower + '_invites') || '0', 10);
   }
+  // ✅ Nouveau getter pour le bouton Continuer
+  get afficherBoutonContinuer(): boolean {
+  return this.victoire && !this.afficherAdresse;
+}
+
+
 
   // ================== INSCRIPTION ==================
   afficherFormulaire(): void {
@@ -133,13 +155,17 @@ export class JeuComponent implements OnInit {
     this.majCompteur(emailLower);
 
     if (joueur.tentatives >= 1 && this.compteurBonus > 0) {
-      this.resultatMessage = `❌ Maximum de tentatives atteint ! Invitez 3 amis pour une seconde chance (${this.maxBonus - this.compteurBonus}/${this.maxBonus}).`;
+      this.resultatMessage = `❌ Maximum de tentatives atteint ! Invitez 3 amis pour rejouer (${this.maxBonus - this.compteurBonus}/${this.maxBonus}).`;
       this.resultColor = 'red';
       this.afficherBonus = true;
       this.afficherJeu = true;
+
+      // ❌ Ne pas afficher le bouton continuer ni le scroll
+      this.afficherCode = false;
+      this.afficherChrono = false;
       return;
     }
-
+    // === Sinon, début de partie normale ===
     this.afficherJeu = true;
     this.nouvellePartie();
     this.startTimer();
@@ -154,22 +180,21 @@ export class JeuComponent implements OnInit {
   }
 
   // ================== JEU ==================
-  genererCode(longueur: number = 8): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    return Array.from({ length: longueur }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
-  }
 
   nouvellePartie(): void {
     this.afficherCode = true;
     this.afficherChrono = true;
-    this.codeComplet = this.genererCode();
+
+    // Ici tu peux décider d'utiliser un mot difficile plutôt qu'un code aléatoire
+    this.codeComplet = this.motsDifficiles[Math.floor(Math.random() * this.motsDifficiles.length)].toUpperCase();
+
     let codeArray = this.codeComplet.split('');
 
     do {
       this.indexManquant = Math.floor(Math.random() * codeArray.length);
     } while (!isNaN(Number(codeArray[this.indexManquant])));
 
-    this.lettreCorrecte = this.lettresGagnantes[Math.floor(Math.random() * this.lettresGagnantes.length)];
+    this.lettreCorrecte = codeArray[this.indexManquant];
     codeArray[this.indexManquant] = '_';
     this.codeAffiche = codeArray.join(' ');
 
@@ -192,19 +217,25 @@ export class JeuComponent implements OnInit {
     joueur.tentatives++;
     localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
 
+    clearInterval(this.timer); // ✅ Stop chrono
+
+
     if (input === this.lettreCorrecte) {
-      clearInterval(this.timer);
+      // clearInterval(this.timer);
       this.resultatMessage = '🎉 Félicitations ! Vous avez trouvé la bonne lettre 🎯';
       this.resultColor = 'green';
       this.afficherCode = false;
       this.afficherChrono = false;
+      // ✅ Seul ici on active le bouton continuer
+      // this.boutonContinuer = true;
+       this.victoire = true; // ✅ Victoire confirmée
       this.invitationEnvoyee = true;
       this.notifierAdmin(`Le joueur ${joueur.prenom} (${emailLower}) a gagné le jeu.`);
       setTimeout(() => document.getElementById('btnContinuer')?.scrollIntoView({ behavior: 'smooth' }), 300);
     } else {
-      this.resultatMessage = '❌ Mauvais choix... un email d\'invitation vous a été envoyé pour débloquer une seconde chance.';
+      this.resultatMessage = `❌ Mauvais choix... La bonne lettre était "${this.lettreCorrecte}".\nLe mot était : ${this.codeComplet}`;
       this.resultColor = 'red';
-      this.afficherCode = false;
+      this.codeAffiche = this.codeComplet.split('').join(' ')
       this.afficherChrono = false;
       this.ajouterInvitation(emailLower);
       this.majCompteur(emailLower);
@@ -228,22 +259,25 @@ export class JeuComponent implements OnInit {
       lien_parrainage: lien,
       message: messagePersonnalise || `Bonjour ${joueur.prenom},\n\nMerci d'avoir joué ! Transférez ce lien à 3 amis pour obtenir une seconde chance.\n\nLien : ${lien}`
     };
-
-    emailjs.send('service_9od4cf4','template_dj7cys6', templateParams, '4NHyPfpmCWsVhqyAO')
+    // ✅ Email au joueur
+    emailjs.send('service_9od4cf4', 'template_dj7cys6', templateParams, '4NHyPfpmCWsVhqyAO')
       .then(() => {
         console.log('Email d\'invitation envoyé au joueur.');
         const invitationsEnvoyees = JSON.parse(localStorage.getItem('invitationsEnvoyees') || '{}');
         invitationsEnvoyees[emailPlayerLower] = true;
         localStorage.setItem('invitationsEnvoyees', JSON.stringify(invitationsEnvoyees));
-        this.invitationEnvoyee = true;
+        // this.invitationEnvoyee = true;
+        // ✅ Affichage message utilisateur
+        this.resultatMessage = `📧 Invitation envoyée à ${joueur.prenom} (${emailPlayerLower}) !`;
+        this.resultColor = 'green';
       })
       .catch(err => console.error('Erreur EmailJS invitation joueur:', err));
-
-    this.notifierAdmin(`Une invitation a été générée pour ${joueur.prenom} (${emailPlayerLower}).`, 'invitation');
+    // ✅ Email admin séparé
+    // this.notifierAdmin(`Une invitation a été générée pour ${joueur.prenom} (${emailPlayerLower}).`, 'invitation');
   }
 
-  private notifierAdmin(message: string, type: 'jeu'|'invitation'|'livraison' = 'jeu'): void {
-    emailjs.send('service_9od4cf4','template_jiceud5',{ message },'4NHyPfpmCWsVhqyAO')
+  private notifierAdmin(message: string, type: 'jeu' | 'invitation' | 'livraison' = 'jeu'): void {
+    emailjs.send('service_9od4cf4', 'template_jiceud5', { message }, '4NHyPfpmCWsVhqyAO')
       .then(() => console.log(`Notification admin (${type}) envoyée !`))
       .catch(err => console.error('Erreur EmailJS admin:', err));
   }
@@ -266,6 +300,7 @@ export class JeuComponent implements OnInit {
   }
 
   finChronoOuEchec(): void {
+    clearInterval(this.timer); // ✅ Stop chrono
     const emailLower = this.email.toLowerCase();
     const joueur = this.emailsInscrits[emailLower];
     if (!joueur) return;
@@ -279,7 +314,7 @@ export class JeuComponent implements OnInit {
     this.codeAffiche = '---';
     this.afficherCode = false;
     this.afficherChrono = false;
-    this.resultatMessage = '⏰ Temps écoulé ! Un email d\'invitation vous a été envoyé.';
+    this.resultatMessage = `⏰ Temps écoulé ! Le mot était : ${this.codeComplet}`;
     this.resultColor = 'orange';
 
     this.ajouterInvitation(emailLower);
@@ -311,14 +346,14 @@ export class JeuComponent implements OnInit {
     `;
 
     // Email client
-    emailjs.send('service_9od4cf4','template_sjokwih',{
+    emailjs.send('service_9od4cf4', 'template_sjokwih', {
       to_email: this.email,
       prenom: this.prenom,
       adresse: this.adresse,
       ville: this.ville,
       codePostal: this.codePostal,
       message: messageLivraison
-    },'4NHyPfpmCWsVhqyAO')
+    }, '4NHyPfpmCWsVhqyAO')
       .then(() => console.log('Email client envoyé !'))
       .catch(err => console.error('Erreur EmailJS client:', err));
 
@@ -331,7 +366,7 @@ export class JeuComponent implements OnInit {
     alert('Le lien d\'invitation n’est pas affiché. Utilisez l’email reçu.');
   }
 
-  partager(reseau: 'facebook'|'whatsapp'|'twitter'|'instagram'): void {
+  partager(reseau: 'facebook' | 'whatsapp' | 'twitter' | 'instagram'): void {
     alert('Partage direct indisponible. Utilisez l’email reçu.');
   }
 
