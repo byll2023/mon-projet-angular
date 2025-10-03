@@ -8,7 +8,9 @@
   background: #fafafa;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   text-align: center;
   margin-bottom: 1rem;
 }
@@ -70,7 +72,8 @@ input:focus {
 }
 
 /* ========= BOUTONS ========= */
-.btn, button {
+.btn,
+button {
   background: #27ae60;
   color: #fff;
   border: none;
@@ -81,7 +84,8 @@ input:focus {
   transition: all 0.2s ease;
 }
 
-.btn:hover, button:hover {
+.btn:hover,
+button:hover {
   background: #219150;
   transform: translateY(-2px);
 }
@@ -182,10 +186,22 @@ footer a:hover {
 
 /* ========= RESPONSIVE ========= */
 @media (max-width: 600px) {
-  h1 { font-size: 1.6rem; }
-  h2 { font-size: 1.3rem; }
-  .code { font-size: 1.6rem; letter-spacing: 0.2rem; }
-  .btn { width: 100%; }
+  h1 {
+    font-size: 1.6rem;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+  }
+
+  .code {
+    font-size: 1.6rem;
+    letter-spacing: 0.2rem;
+  }
+
+  .btn {
+    width: 100%;
+  }
 }
 
 /* ========= PHRASE MANQUANTE ========= */
@@ -211,15 +227,27 @@ footer a:hover {
 
 /* Animation subtile pour attirer l’attention */
 @keyframes pulse {
-  0% { transform: scale(1); box-shadow: 0 0 10px rgba(243, 156, 18, 0.4); }
-  50% { transform: scale(1.02); box-shadow: 0 0 20px rgba(243, 156, 18, 0.6); }
-  100% { transform: scale(1); box-shadow: 0 0 10px rgba(243, 156, 18, 0.4); }
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 10px rgba(243, 156, 18, 0.4);
+  }
+
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 20px rgba(243, 156, 18, 0.6);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 10px rgba(243, 156, 18, 0.4);
+  }
 }
+
 /* ========= BOUTON CONTINUER ========= */
 /* ========= ESPACEMENT BOUTON CONTINUER ========= */
 .btn-continuer {
-  margin-top: 1.5rem; /* espace au-dessus du bouton */
-  display: inline-block; /* facultatif, pour être sûr qu'il reste aligné comme un bouton */
+  margin-top: 1.5rem;
+  /* espace au-dessus du bouton */
+  display: inline-block;
+  /* facultatif, pour être sûr qu'il reste aligné comme un bouton */
 }
-
-

@@ -27,10 +27,10 @@ interface Avis {
 export class JeuComponent implements OnInit {
 
   // ================== VARIABLES JEU ==================
-  codeComplet: string = '';              
-  codeAffiche: string = '';            
-  reponseSaisie: string = '';            
-  chrono: number = 40;
+  codeComplet: string = '';
+  codeAffiche: string = '';
+  reponseSaisie: string = '';
+  chrono: number = 30;
   timer!: ReturnType<typeof setInterval>;
   maxBonus: number = 3;
   compteurBonus: number = 0;
@@ -41,58 +41,57 @@ export class JeuComponent implements OnInit {
   afficherChrono: boolean = true;
 
   // ================== PHRASES ==================
-  phrases: { texte: string, mot: string }[] = [
- { texte: "On ne peut pas attraper deux *** à la fois", mot: "lièvres" },
-  { texte: "Même les montagnes les plus hautes commencent par un ***", mot: "grain" },
-  { texte: "Il faut savoir ménager la chèvre et le ***", mot: "chou" },
-  { texte: "La curiosité est un vilain ***", mot: "défaut" },
-  { texte: "La lumière jaillit là où règne le ***", mot: "silence" },
+ phrases: { texte: string, mot: string }[] = [
+  { texte: "On ne peut pas attraper deux *** à la fois", mot: "proies" },
+  { texte: "Même les montagnes les plus hautes commencent par un ***", mot: "pas" },
+  { texte: "Il faut savoir ménager la chèvre et le ***", mot: "loup" },
+  { texte: "La curiosité est un vilain ***", mot: "travers" },
+  { texte: "La lumière jaillit là où règne le ***", mot: "calme" },
   { texte: "L’arbre cache souvent la forêt et le *** aussi", mot: "détail" },
-  { texte: "Qui sème le vent récolte la ***", mot: "tempête" },
-  { texte: "Mieux vaut un mauvais arrangement que un bon ***", mot: "procès" },
-  { texte: "Les belles paroles ne font pas le ***", mot: "pain" },
+  { texte: "Qui sème le vent récolte la ***", mot: "tourmente" },
+  { texte: "Mieux vaut un mauvais arrangement qu’un bon ***", mot: "procès" },
+  { texte: "Les belles paroles ne font pas le ***", mot: "repas" },
   { texte: "C’est dans l’adversité que l’on découvre le vrai ***", mot: "courage" },
-  { texte: "Il n’y a pas de roses sans ***", mot: "épines" },
-  { texte: "Tout ce qui brille n’est pas ***", mot: "or" },
-  { texte: "Le temps perdu ne se retrouve jamais et les heures perdues ne reviennent jamais et la *** non plus", mot: "jeunesse" },
-  { texte: "À force de tirer sur la corde, elle finit par ***", mot: "céder" },
-  { texte: "L’appétit vient en mangeant et la curiosité en ***", mot: "regardant" },
-  { texte: "Chaque nuage a sa ***", mot: "lueur" },
-  { texte: "La parole est d’argent, mais le silence est de ***", mot: "plomb" },
-  { texte: "On n’apprend pas à un vieux singe à faire des ***", mot: "grimaces" },
-  { texte: "Qui veut voyager loin ménage sa ***", mot: "monture" },
-  { texte: "La patience est amère, mais son fruit est ***", mot: "doux" },
-  { texte: "Il ne faut pas réveiller le chat qui dort et le *** non plus", mot: "lion" },
+  { texte: "Il n’y a pas de roses sans ***", mot: "piquants" },
+  { texte: "Tout ce qui brille n’est pas ***", mot: "diamant" },
+  { texte: "Le temps perdu ne se retrouve jamais et la *** non plus", mot: "jeunesse" },
+  { texte: "À force de tirer sur la corde, elle finit par se ***", mot: "briser" },
+  { texte: "L’appétit vient en mangeant et la curiosité en ***", mot: "observant" },
+  { texte: "Chaque nuage a sa ***", mot: "clarté" },
+  { texte: "La parole est d’argent, mais le silence est de ***", mot: "sagesse" },
+  { texte: "On n’apprend pas à un vieux singe à faire des ***", mot: "tours" },
+  { texte: "Qui veut voyager loin ménage sa ***", mot: "force" },
+  { texte: "La patience est amère, mais son fruit est ***", mot: "mielleux" },
+  { texte: "Il ne faut pas réveiller le chat qui dort et le *** non plus", mot: "tigre" },
   { texte: "Le mensonge a des jambes courtes mais la vérité a des ***", mot: "ailes" },
   { texte: "À bon vin point d’***", mot: "enseigne" },
-  { texte: "On n’attrape pas les mouches avec du vinaigre mais avec du ***", mot: "miel" },
+  { texte: "On attire plus les mouches avec du *** qu’avec du vinaigre", mot: "nectar" }, 
   { texte: "Les murs ont des ***", mot: "oreilles" },
-  { texte: "Il vaut mieux être seul que mal ***", mot: "accompagné" },
-  { texte: "La mer est belle mais elle cache des ***", mot: "courants" },
-  { texte: "Les chaînes les plus solides sont celles que l’on ne voit pas et les plus légères celles du ***", mot: "désir" },
-  { texte: "On ne fait pas d’omelette sans casser des ***", mot: "œufs" },
-  { texte: "À chacun son goût et chacun son ***", mot: "opinion" },
-  { texte: "Le savoir est une richesse que l’on ne peut perdre, contrairement à l’***", mot: "argent" },
-  { texte: "Qui trotte doucement va loin et qui file trop vite trébuche sur la ***", mot: "racine" },
-  { texte: "Le vent se lève, il faut tenter de tenir la ***", mot: "voile" },
-  { texte: "Le monde est un théâtre et nous ne sommes que des ***", mot: "acteurs" },
-  { texte: "On ne jette pas la pierre quand on a un *** en main", mot: "verre" },
-  { texte: "La mémoire est un jardin qu’il faut arroser, sinon il se couvre de ***", mot: "mauvaises herbes" },
-  { texte: "L’espoir est le compagnon du courage et le frère de la ***", mot: "patience" },
-  { texte: "Les grandes idées naissent souvent dans un esprit ***", mot: "agité" },
-  { texte: "Il faut tourner sept fois sa langue dans sa *** avant de parler", mot: "bouche" },
-  { texte: "Le cœur a ses raisons que la raison ignore et parfois le *** aussi", mot: "cerveau" },
-  { texte: "Le sommeil est le cousin de la ***", mot: "mort" },
-  { texte: "L’art de la guerre est celui de la stratégie et celui de la ***", mot: "discrétion" },
-  { texte: "Les yeux sont le miroir de l’âme et parfois de la ***", mot: "tristesse" },
-  { texte: "On ne peut plaire à tout le monde, surtout aux ***", mot: "mécontents" },
-  { texte: "L’argent parle, mais le silence vaut ***", mot: "écoute" },
-  { texte: "Le feu purifie tout, même les cœurs les plus ***", mot: "durs" },
-  { texte: "On reconnaît l’arbre à ses fruits et l’homme à ses ***", mot: "actes" },
+  { texte: "Il vaut mieux être seul que mal ***", mot: "entouré" },
+  { texte: "La mer est belle mais elle cache des ***", mot: "abîmes" },
+  { texte: "Les chaînes les plus solides sont celles qu’on ne voit pas et les plus légères celles du ***", mot: "désir" },
+  { texte: "On ne fait pas d’omelette sans casser des ***", mot: "coquilles" },
+  { texte: "À chacun son goût et chacun son ***", mot: "avis" },
+  { texte: "Le savoir est une richesse que l’on ne peut perdre, contrairement à la***", mot: "monnaie" },
+  { texte: "Qui trotte doucement va loin et qui file trop vite trébuche sur la ***", mot: "pierre" },
+  { texte: "Le vent se lève, il faut tenter de tenir la ***", mot: "cap" },
+  { texte: "Le monde est un théâtre et nous ne sommes que des ***", mot: "rôles" },
+  { texte: "On ne jette pas la pierre quand on a un *** en main", mot: "miroir" },
+  { texte: "La mémoire est un jardin qu’il faut arroser, sinon il se couvre de ***", mot: "ronces" },
+  { texte: "L’espoir est le compagnon du courage et le frère de la ***", mot: "ténacité" },
+  { texte: "Les grandes idées naissent dans un esprit ***", mot: "ingénieux" },
+  { texte: "Il faut tourner sept fois sa langue dans son *** avant de parler", mot: "palais" },
+  { texte: "Le cœur a ses raisons que la raison ignore et parfois le *** aussi", mot: "corps" },
+  { texte: "L’art de la guerre est celui de la stratégie et celui de la ***", mot: "ruse" },
+  { texte: "On ne peut plaire à tout le monde, surtout aux ***", mot: "critiques" },
+  { texte: "L’argent parle, mais le silence vaut ***", mot: "saphir" }, 
+  { texte: "Le feu purifie tout, même les cœurs les plus ***", mot: "froids" },
+  { texte: "On reconnaît l’arbre à ses fruits et l’homme à ses ***", mot: "réalisations" },
   { texte: "La vérité sort de la bouche des ***", mot: "enfants" },
-  { texte: "La chance sourit aux audacieux et fuis les ***", mot: "timides" },
-  { texte: "Qui ne risque rien n’a rien et qui reste passif perd sa ***", mot: "chance" }
-  ];
+  { texte: "La chance sourit aux audacieux et fuit les ***", mot: "peureux" },
+  { texte: "Qui ne risque rien n’a rien et qui reste passif perd son ***", mot: "occasion" }
+];
+
   phrasesDejaJouees: Set<number> = new Set();
   phraseActuelle?: { texte: string, mot: string };
 
@@ -116,7 +115,7 @@ export class JeuComponent implements OnInit {
   bonusDisponible: boolean = true;
   resultatMessage: string = '';
   resultColor: string = 'black';
-  victoire: boolean = false; 
+  victoire: boolean = false;
 
   // ================== STOCKAGE LOCAL ==================
   emailsInscrits: { [key: string]: Joueur } = {};
@@ -233,7 +232,13 @@ export class JeuComponent implements OnInit {
     this.phrasesDejaJouees.add(index);
 
     this.codeComplet = this.phraseActuelle.mot.toUpperCase();
-    this.codeAffiche = this.phraseActuelle.texte;
+    // REMPLACEMENT: créer un trait long de la même longueur que le mot
+    const traitLong = '_____';
+    this.codeAffiche = this.phraseActuelle.texte.replace(/\*+/g, traitLong);
+
+
+
+
 
     this.resultatMessage = '';
     this.reponseSaisie = '';
@@ -309,7 +314,7 @@ export class JeuComponent implements OnInit {
   // ================== TIMER ==================
   startTimer(): void {
     clearInterval(this.timer);
-    this.chrono = 40;
+    this.chrono = 30;
     this.afficherChrono = true;
     this.afficherCode = true;
     this.tentativeEnCours = true;

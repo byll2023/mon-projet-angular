@@ -47,7 +47,7 @@
     <h2>Trouvez le mot manquant</h2>
 
     <!-- Affichage de la phrase avec le mot caché -->
-    <p class="phrase" *ngIf="phraseActuelle">{{ phraseActuelle.texte }}</p>
+    <p class="phrase" *ngIf="phraseActuelle">{{ codeAffiche }}</p>
 
     <!-- Chrono -->
     <p *ngIf="tentativeEnCours">⏱ Chrono : {{ chrono }} secondes</p>
