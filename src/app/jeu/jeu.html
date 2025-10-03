@@ -2,17 +2,20 @@
 
   <!-- HEADER -->
   <header>
-    <h1>🎁 Jeu Ferargile</h1>
-    <p>Tentez de gagner vos chaussettes avant le lancement officiel !</p>
+    <h1>🎁 Gagnez vos chaussettes épaisses pour affronter le froid ! </h1>
+    <p>Tentez de gagner vos chaussettes <strong>Fitloam</strong>, disponibles uniquement sur
+      <a href="https://ferargile.com" target="_blank">ferargile.com</a>,
+      le site officiel de la marque.
+    </p>
   </header>
 
   <!-- ================= RÈGLES DU JEU ================= -->
   <section class="hero" *ngIf="!afficherInscription && !afficherJeu && !afficherAdresse">
     <h2>📌 Règles du jeu</h2>
     <p>Inscrivez-vous avec votre prénom et votre email.</p>
-    <p>Un mot apparaît avec une lettre manquante.</p>
-    <p>Vous devez deviner la lettre manquante <strong>(Indice : A-Z)</strong>.</p>
-    <p>Vous avez <strong>30 secondes</strong> pour trouver la lettre.</p>
+    <p>Une phrase apparaît avec un <strong>mot manquant</strong>.</p>
+    <p>Vous devez deviner le mot manquant complet.</p>
+    <p>Vous avez <strong>30 secondes</strong> pour trouver la réponse.</p>
     <p>Vous avez droit à une seule tentative.</p>
     <p>En cas d’échec, invitez 3 amis pour obtenir une seconde chance.</p>
     <button class="btn" (click)="afficherFormulaire()">Je tente ma chance</button>
@@ -29,8 +32,8 @@
       <input id="email" type="email" placeholder="Votre email" [(ngModel)]="email" name="email" required />
 
       <label>
-        <input type="checkbox" [(ngModel)]="accepterNewsletter" name="newsletter" required />
-        J’accepte de recevoir les nouveautés Ferargile
+        <input type="checkbox" [(ngModel)]="accepterNewsletter" name="newsletter" />
+        J’accepte de recevoir les nouveautés ferargile
       </label>
 
       <button type="submit" class="btn" [disabled]="!formInscription.valid">
@@ -41,36 +44,37 @@
 
   <!-- JEU -->
   <section id="jeuSection" class="jeu" *ngIf="afficherJeu">
-    <h2>Code à deviner</h2>
+    <h2>Trouvez le mot manquant</h2>
 
-    <!-- Affichage du mot avec lettre manquante -->
-    <p class="code">{{ codeAffiche }}</p>
+    <!-- Affichage de la phrase avec le mot caché -->
+    <p class="phrase" *ngIf="phraseActuelle">{{ phraseActuelle.texte }}</p>
 
     <!-- Chrono -->
     <p *ngIf="tentativeEnCours">⏱ Chrono : {{ chrono }} secondes</p>
 
-    <!-- Saisie lettre -->
-    <label for="lettre">Votre lettre</label>
-    <input id="lettre" type="text" [(ngModel)]="lettreSaisie" name="lettre" maxlength="1"
-      placeholder="Entrez une lettre" [disabled]="!tentativeEnCours" />
+    <!-- Saisie du mot -->
+    <label for="mot">Votre mot</label>
+    <input id="mot" type="text" [(ngModel)]="reponseSaisie" name="mot" placeholder="Entrez le mot manquant"
+      [disabled]="!tentativeEnCours" />
     <button class="btn" (click)="verifierCode()" [disabled]="!tentativeEnCours">Vérifier</button>
 
     <!-- Message résultat -->
     <p class="result" [style.color]="resultColor">{{ resultatMessage }}</p>
+
     <!-- Bouton Continuer si victoire -->
-    <button id="btnContinuer" *ngIf="afficherBoutonContinuer" class="btn" (click)="passerAdresse()">
+    <button id="btnContinuer" *ngIf="afficherBoutonContinuer" class="btn btn-continuer" (click)="passerAdresse()">
       Continuer ➡️
     </button>
+
     <!-- BONUS : inviter un ami -->
     <div *ngIf="joueurActuel && joueurActuel.tentatives >= 1 && invites < maxBonus">
-      <button class="btn" (click)="inviterAmi()">🎁 Inviter un ami pour rejouer</button>
-      <p>Vous pouvez inviter jusqu’à {{ maxBonus }} amis pour obtenir une seconde chance.</p>
+      <button class="btn" (click)="inviterAmi()">📧 Envoyer le lien de seconde chance</button>
+      <p>💡 Astuce : Le lien vous sera envoyé directement dans votre boîte mail pour rejouer au jeu. </p>
     </div>
 
     <!-- Compteur amis validés -->
     <p>Amis validés : {{ invites }}/{{ maxBonus }}</p>
   </section>
-
 
   <!-- FORMULAIRE ADRESSE -->
   <section id="adresseForm" class="adresse-livraison" *ngIf="afficherAdresse">
@@ -114,7 +118,7 @@
   <footer>
     <p>© 2025 Ferargile. Tous droits réservés.</p>
     <p>
-      Abonnez-vous sur
+      Decouvrez
       <a href="https://ferargile.com/" target="_blank">ferargile.com</a>
     </p>
   </footer>

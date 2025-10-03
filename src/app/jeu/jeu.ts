@@ -27,31 +27,74 @@ interface Avis {
 export class JeuComponent implements OnInit {
 
   // ================== VARIABLES JEU ==================
-  codeComplet: string = '';
-  indexManquant: number = 0;
-  lettreCorrecte: string = '';
-  codeAffiche: string = '---';
-  lettreSaisie: string = '';
+  codeComplet: string = '';              
+  codeAffiche: string = '';            
+  reponseSaisie: string = '';            
   chrono: number = 40;
   timer!: ReturnType<typeof setInterval>;
   maxBonus: number = 3;
   compteurBonus: number = 0;
   tentativeEnCours: boolean = false;
-  // lettresGagnantes: string[] = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
-  // ================== NOUVEAU : MOTS DIFFICILES ==================
-  motsDifficiles: string[] = [
-    "hippopotomonstrosesquippedaliophobie",
-    "anticonstitutionnellement",
-    "sphygmomanomètre",
-    "xylophone",
-    "pneumonoultramicroscopicsilicovolcanoconiose",
-    "chrysanthemum",
-    "triskaïdekaphobie",
-    "procrastination",
-    "rhombicosidodécaèdre",
-    "substantiellement"
+  // ================== AFFICHAGE ==================
+  afficherCode: boolean = true;
+  afficherChrono: boolean = true;
+
+  // ================== PHRASES ==================
+  phrases: { texte: string, mot: string }[] = [
+ { texte: "On ne peut pas attraper deux *** à la fois", mot: "lièvres" },
+  { texte: "Même les montagnes les plus hautes commencent par un ***", mot: "grain" },
+  { texte: "Il faut savoir ménager la chèvre et le ***", mot: "chou" },
+  { texte: "La curiosité est un vilain ***", mot: "défaut" },
+  { texte: "La lumière jaillit là où règne le ***", mot: "silence" },
+  { texte: "L’arbre cache souvent la forêt et le *** aussi", mot: "détail" },
+  { texte: "Qui sème le vent récolte la ***", mot: "tempête" },
+  { texte: "Mieux vaut un mauvais arrangement que un bon ***", mot: "procès" },
+  { texte: "Les belles paroles ne font pas le ***", mot: "pain" },
+  { texte: "C’est dans l’adversité que l’on découvre le vrai ***", mot: "courage" },
+  { texte: "Il n’y a pas de roses sans ***", mot: "épines" },
+  { texte: "Tout ce qui brille n’est pas ***", mot: "or" },
+  { texte: "Le temps perdu ne se retrouve jamais et les heures perdues ne reviennent jamais et la *** non plus", mot: "jeunesse" },
+  { texte: "À force de tirer sur la corde, elle finit par ***", mot: "céder" },
+  { texte: "L’appétit vient en mangeant et la curiosité en ***", mot: "regardant" },
+  { texte: "Chaque nuage a sa ***", mot: "lueur" },
+  { texte: "La parole est d’argent, mais le silence est de ***", mot: "plomb" },
+  { texte: "On n’apprend pas à un vieux singe à faire des ***", mot: "grimaces" },
+  { texte: "Qui veut voyager loin ménage sa ***", mot: "monture" },
+  { texte: "La patience est amère, mais son fruit est ***", mot: "doux" },
+  { texte: "Il ne faut pas réveiller le chat qui dort et le *** non plus", mot: "lion" },
+  { texte: "Le mensonge a des jambes courtes mais la vérité a des ***", mot: "ailes" },
+  { texte: "À bon vin point d’***", mot: "enseigne" },
+  { texte: "On n’attrape pas les mouches avec du vinaigre mais avec du ***", mot: "miel" },
+  { texte: "Les murs ont des ***", mot: "oreilles" },
+  { texte: "Il vaut mieux être seul que mal ***", mot: "accompagné" },
+  { texte: "La mer est belle mais elle cache des ***", mot: "courants" },
+  { texte: "Les chaînes les plus solides sont celles que l’on ne voit pas et les plus légères celles du ***", mot: "désir" },
+  { texte: "On ne fait pas d’omelette sans casser des ***", mot: "œufs" },
+  { texte: "À chacun son goût et chacun son ***", mot: "opinion" },
+  { texte: "Le savoir est une richesse que l’on ne peut perdre, contrairement à l’***", mot: "argent" },
+  { texte: "Qui trotte doucement va loin et qui file trop vite trébuche sur la ***", mot: "racine" },
+  { texte: "Le vent se lève, il faut tenter de tenir la ***", mot: "voile" },
+  { texte: "Le monde est un théâtre et nous ne sommes que des ***", mot: "acteurs" },
+  { texte: "On ne jette pas la pierre quand on a un *** en main", mot: "verre" },
+  { texte: "La mémoire est un jardin qu’il faut arroser, sinon il se couvre de ***", mot: "mauvaises herbes" },
+  { texte: "L’espoir est le compagnon du courage et le frère de la ***", mot: "patience" },
+  { texte: "Les grandes idées naissent souvent dans un esprit ***", mot: "agité" },
+  { texte: "Il faut tourner sept fois sa langue dans sa *** avant de parler", mot: "bouche" },
+  { texte: "Le cœur a ses raisons que la raison ignore et parfois le *** aussi", mot: "cerveau" },
+  { texte: "Le sommeil est le cousin de la ***", mot: "mort" },
+  { texte: "L’art de la guerre est celui de la stratégie et celui de la ***", mot: "discrétion" },
+  { texte: "Les yeux sont le miroir de l’âme et parfois de la ***", mot: "tristesse" },
+  { texte: "On ne peut plaire à tout le monde, surtout aux ***", mot: "mécontents" },
+  { texte: "L’argent parle, mais le silence vaut ***", mot: "écoute" },
+  { texte: "Le feu purifie tout, même les cœurs les plus ***", mot: "durs" },
+  { texte: "On reconnaît l’arbre à ses fruits et l’homme à ses ***", mot: "actes" },
+  { texte: "La vérité sort de la bouche des ***", mot: "enfants" },
+  { texte: "La chance sourit aux audacieux et fuis les ***", mot: "timides" },
+  { texte: "Qui ne risque rien n’a rien et qui reste passif perd sa ***", mot: "chance" }
   ];
+  phrasesDejaJouees: Set<number> = new Set();
+  phraseActuelle?: { texte: string, mot: string };
 
   // ================== VARIABLES JOUEUR ==================
   prenom: string = '';
@@ -73,10 +116,7 @@ export class JeuComponent implements OnInit {
   bonusDisponible: boolean = true;
   resultatMessage: string = '';
   resultColor: string = 'black';
-  afficherCode: boolean = true;
-  afficherChrono: boolean = true;
   victoire: boolean = false; 
-
 
   // ================== STOCKAGE LOCAL ==================
   emailsInscrits: { [key: string]: Joueur } = {};
@@ -125,12 +165,10 @@ export class JeuComponent implements OnInit {
     const emailLower = this.email.toLowerCase();
     return parseInt(localStorage.getItem(emailLower + '_invites') || '0', 10);
   }
-  // ✅ Nouveau getter pour le bouton Continuer
+
   get afficherBoutonContinuer(): boolean {
-  return this.victoire && !this.afficherAdresse;
-}
-
-
+    return this.victoire && !this.afficherAdresse;
+  }
 
   // ================== INSCRIPTION ==================
   afficherFormulaire(): void {
@@ -159,13 +197,11 @@ export class JeuComponent implements OnInit {
       this.resultColor = 'red';
       this.afficherBonus = true;
       this.afficherJeu = true;
-
-      // ❌ Ne pas afficher le bouton continuer ni le scroll
       this.afficherCode = false;
       this.afficherChrono = false;
       return;
     }
-    // === Sinon, début de partie normale ===
+
     this.afficherJeu = true;
     this.nouvellePartie();
     this.startTimer();
@@ -180,26 +216,27 @@ export class JeuComponent implements OnInit {
   }
 
   // ================== JEU ==================
-
   nouvellePartie(): void {
     this.afficherCode = true;
     this.afficherChrono = true;
 
-    // Ici tu peux décider d'utiliser un mot difficile plutôt qu'un code aléatoire
-    this.codeComplet = this.motsDifficiles[Math.floor(Math.random() * this.motsDifficiles.length)].toUpperCase();
-
-    let codeArray = this.codeComplet.split('');
+    let index: number;
+    if (this.phrasesDejaJouees.size >= this.phrases.length) {
+      this.phrasesDejaJouees.clear();
+    }
 
     do {
-      this.indexManquant = Math.floor(Math.random() * codeArray.length);
-    } while (!isNaN(Number(codeArray[this.indexManquant])));
+      index = Math.floor(Math.random() * this.phrases.length);
+    } while (this.phrasesDejaJouees.has(index));
 
-    this.lettreCorrecte = codeArray[this.indexManquant];
-    codeArray[this.indexManquant] = '_';
-    this.codeAffiche = codeArray.join(' ');
+    this.phraseActuelle = this.phrases[index];
+    this.phrasesDejaJouees.add(index);
+
+    this.codeComplet = this.phraseActuelle.mot.toUpperCase();
+    this.codeAffiche = this.phraseActuelle.texte;
 
     this.resultatMessage = '';
-    this.lettreSaisie = '';
+    this.reponseSaisie = '';
     this.afficherBonus = false;
     this.tentativeEnCours = true;
   }
@@ -207,7 +244,7 @@ export class JeuComponent implements OnInit {
   verifierCode(): void {
     if (!this.tentativeEnCours) return;
 
-    const input = this.lettreSaisie.toUpperCase();
+    const input = this.reponseSaisie.trim().toUpperCase();
     const emailLower = this.email.toLowerCase();
     const joueur = this.joueurActuel;
 
@@ -217,26 +254,18 @@ export class JeuComponent implements OnInit {
     joueur.tentatives++;
     localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
 
-    clearInterval(this.timer); // ✅ Stop chrono
+    clearInterval(this.timer);
 
-
-    if (input === this.lettreCorrecte) {
-      // clearInterval(this.timer);
-      this.resultatMessage = '🎉 Félicitations ! Vous avez trouvé la bonne lettre 🎯';
+    if (input === this.codeComplet) {
+      this.resultatMessage = '🎉 Bravo ! Vous avez trouvé le mot manquant 🎯';
       this.resultColor = 'green';
-      this.afficherCode = false;
-      this.afficherChrono = false;
-      // ✅ Seul ici on active le bouton continuer
-      // this.boutonContinuer = true;
-       this.victoire = true; // ✅ Victoire confirmée
+      this.victoire = true;
       this.invitationEnvoyee = true;
       this.notifierAdmin(`Le joueur ${joueur.prenom} (${emailLower}) a gagné le jeu.`);
       setTimeout(() => document.getElementById('btnContinuer')?.scrollIntoView({ behavior: 'smooth' }), 300);
     } else {
-      this.resultatMessage = `❌ Mauvais choix... La bonne lettre était "${this.lettreCorrecte}".\nLe mot était : ${this.codeComplet}`;
+      this.resultatMessage = `❌ Mauvais choix... Le mot était "${this.codeComplet}".`;
       this.resultColor = 'red';
-      this.codeAffiche = this.codeComplet.split('').join(' ')
-      this.afficherChrono = false;
       this.ajouterInvitation(emailLower);
       this.majCompteur(emailLower);
     }
@@ -259,27 +288,22 @@ export class JeuComponent implements OnInit {
       lien_parrainage: lien,
       message: messagePersonnalise || `Bonjour ${joueur.prenom},\n\nMerci d'avoir joué ! Transférez ce lien à 3 amis pour obtenir une seconde chance.\n\nLien : ${lien}`
     };
-    // ✅ Email au joueur
+
     emailjs.send('service_9od4cf4', 'template_dj7cys6', templateParams, '4NHyPfpmCWsVhqyAO')
       .then(() => {
         console.log('Email d\'invitation envoyé au joueur.');
         const invitationsEnvoyees = JSON.parse(localStorage.getItem('invitationsEnvoyees') || '{}');
         invitationsEnvoyees[emailPlayerLower] = true;
         localStorage.setItem('invitationsEnvoyees', JSON.stringify(invitationsEnvoyees));
-        // this.invitationEnvoyee = true;
-        // ✅ Affichage message utilisateur
         this.resultatMessage = `📧 Invitation envoyée à ${joueur.prenom} (${emailPlayerLower}) !`;
         this.resultColor = 'green';
       })
-      .catch(err => console.error('Erreur EmailJS invitation joueur:', err));
-    // ✅ Email admin séparé
-    // this.notifierAdmin(`Une invitation a été générée pour ${joueur.prenom} (${emailPlayerLower}).`, 'invitation');
+      .catch((err: any) => console.error('Erreur EmailJS invitation joueur:', err));
   }
 
   private notifierAdmin(message: string, type: 'jeu' | 'invitation' | 'livraison' = 'jeu'): void {
     emailjs.send('service_9od4cf4', 'template_jiceud5', { message }, '4NHyPfpmCWsVhqyAO')
-      .then(() => console.log(`Notification admin (${type}) envoyée !`))
-      .catch(err => console.error('Erreur EmailJS admin:', err));
+      .catch((err: any) => console.error('Erreur EmailJS admin:', err));
   }
 
   // ================== TIMER ==================
@@ -300,7 +324,7 @@ export class JeuComponent implements OnInit {
   }
 
   finChronoOuEchec(): void {
-    clearInterval(this.timer); // ✅ Stop chrono
+    clearInterval(this.timer);
     const emailLower = this.email.toLowerCase();
     const joueur = this.emailsInscrits[emailLower];
     if (!joueur) return;
@@ -311,7 +335,6 @@ export class JeuComponent implements OnInit {
       localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
     }
 
-    this.codeAffiche = '---';
     this.afficherCode = false;
     this.afficherChrono = false;
     this.resultatMessage = `⏰ Temps écoulé ! Le mot était : ${this.codeComplet}`;
@@ -345,7 +368,6 @@ export class JeuComponent implements OnInit {
       👉 Veuillez nous indiquer par courriel le lieu de dépôt souhaité.
     `;
 
-    // Email client
     emailjs.send('service_9od4cf4', 'template_sjokwih', {
       to_email: this.email,
       prenom: this.prenom,
@@ -354,10 +376,8 @@ export class JeuComponent implements OnInit {
       codePostal: this.codePostal,
       message: messageLivraison
     }, '4NHyPfpmCWsVhqyAO')
-      .then(() => console.log('Email client envoyé !'))
-      .catch(err => console.error('Erreur EmailJS client:', err));
+      .catch((err: any) => console.error('Erreur EmailJS client:', err));
 
-    // Email admin
     this.notifierAdmin(`Le client ${this.prenom} (${this.email}) a reçu son email de confirmation.`, 'livraison');
   }
 
