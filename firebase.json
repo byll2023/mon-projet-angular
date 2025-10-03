@@ -1,16 +1,13 @@
 {
   "hosting": {
-    "public": "dist/mon-projet-angular/browser",
+    "public": "dist/todo-angular/browser",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
     ],
     "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
+      { "source": "**", "destination": "/index.html" }
     ]
   },
   "emulators": {

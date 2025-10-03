@@ -1,0 +1,16 @@
+I1003 15:09:07.719075    2056 load.go:31] Reloading schema and connectors...
+I1003 15:09:07.977173    2056 control.go:94] [/emulator/mon-projet-angular 2021] UpdateResources(): done
+Main schema: sources: schema\schema.gql [1992B] 
+Connector "example": sources: example\mutations.gql [1243B] example\queries.gql [1801B] 
+I1003 15:09:08.117311    2056 codegen.go:82] [connector "example" javascriptSdk] Generating sources into "C:\\Users\\kwame lovelyn\\Videos\\todo-app\\mon-projet-angular\\src\\dataconnect-generated"
+I1003 15:09:08.177518    2056 collector.go:107] schema extensions wrote into "C:\\Users\\kwame lovelyn\\Videos\\todo-app\\mon-projet-angular\\dataconnect\\.dataconnect\\schema"
+Generated sources: main\query.gql [5099B] main\mutation.gql [13679B] main\implicit.gql [1261B] main\input.gql [28173B] main\relation.gql [13746B] prelude.gql [73219B] 
+I1003 15:09:08.216768    2056 collector.go:107] connector "example" javascriptSdk wrote into "C:\\Users\\kwame lovelyn\\Videos\\todo-app\\mon-projet-angular\\src\\dataconnect-generated"
+Generated sources: index.d.ts [8025B] esm\index.esm.js [3571B] esm\package.json [17B] index.cjs.js [4061B] README.md [40937B] angular\package.json [653B] angular\esm\package.json [17B] angular\index.cjs.js [3379B] package.json [864B] angular\index.d.ts [3597B] angular\esm\index.esm.js [3172B] angular\README.md [49480B] .guides/usage.md [3460B] .guides/setup.md [1631B] 
+I1003 15:09:08.258248    2056 installsdk.go:55] Package @dataconnect/generated is already installed. Skipping installation
+I1003 15:09:08.261239    2056 load.go:109] Finished reloading
+I1003 15:09:08.267899    2056 dev.go:102] Listening on address (HTTP + gRPC): 127.0.0.1:9399
+I1003 15:09:08.269905    2056 dev.go:102] Listening on address (HTTP + gRPC): [::1]:9399
+I1003 15:09:13.037308    2056 control.go:94] [/emulator/mon-projet-angular 770e] UpdateResources(): done
+Main schema: sources: schema\schema.gql [1992B] 
+Connector "example": sources: example\mutations.gql [1243B] example\queries.gql [1801B] 
