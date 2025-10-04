@@ -29,10 +29,3 @@ export class AppComponent {  ngOnInit(): void {
 
  
 
-// Bootstrapping avec Firebase
-bootstrapApplication(AppComponent, {
-  providers: [
-    provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
-    provideFirestore(() => getFirestore())
-  ]
-});
