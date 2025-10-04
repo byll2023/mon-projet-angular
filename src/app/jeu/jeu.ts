@@ -2,7 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import emailjs from '@emailjs/browser';
+import { InvitationService, JoueurFirestore } from '../services/invitation.service';
 import { environment } from '../../environments/environment';
+
+
 
 interface Joueur {
   prenom: string;
@@ -41,56 +44,56 @@ export class JeuComponent implements OnInit {
   afficherChrono: boolean = true;
 
   // ================== PHRASES ==================
- phrases: { texte: string, mot: string }[] = [
-  { texte: "On ne peut pas attraper deux *** à la fois", mot: "proies" },
-  { texte: "Même les montagnes les plus hautes commencent par un ***", mot: "pas" },
-  { texte: "Il faut savoir ménager la chèvre et le ***", mot: "loup" },
-  { texte: "La curiosité est un vilain ***", mot: "travers" },
-  { texte: "La lumière jaillit là où règne le ***", mot: "calme" },
-  { texte: "L’arbre cache souvent la forêt et le *** aussi", mot: "détail" },
-  { texte: "Qui sème le vent récolte la ***", mot: "tourmente" },
-  { texte: "Mieux vaut un mauvais arrangement qu’un bon ***", mot: "procès" },
-  { texte: "Les belles paroles ne font pas le ***", mot: "repas" },
-  { texte: "C’est dans l’adversité que l’on découvre le vrai ***", mot: "courage" },
-  { texte: "Il n’y a pas de roses sans ***", mot: "piquants" },
-  { texte: "Tout ce qui brille n’est pas ***", mot: "diamant" },
-  { texte: "Le temps perdu ne se retrouve jamais et la *** non plus", mot: "jeunesse" },
-  { texte: "À force de tirer sur la corde, elle finit par se ***", mot: "briser" },
-  { texte: "L’appétit vient en mangeant et la curiosité en ***", mot: "observant" },
-  { texte: "Chaque nuage a sa ***", mot: "clarté" },
-  { texte: "La parole est d’argent, mais le silence est de ***", mot: "sagesse" },
-  { texte: "On n’apprend pas à un vieux singe à faire des ***", mot: "tours" },
-  { texte: "Qui veut voyager loin ménage sa ***", mot: "force" },
-  { texte: "La patience est amère, mais son fruit est ***", mot: "mielleux" },
-  { texte: "Il ne faut pas réveiller le chat qui dort et le *** non plus", mot: "tigre" },
-  { texte: "Le mensonge a des jambes courtes mais la vérité a des ***", mot: "ailes" },
-  { texte: "À bon vin point d’***", mot: "enseigne" },
-  { texte: "On attire plus les mouches avec du *** qu’avec du vinaigre", mot: "nectar" }, 
-  { texte: "Les murs ont des ***", mot: "oreilles" },
-  { texte: "Il vaut mieux être seul que mal ***", mot: "entouré" },
-  { texte: "La mer est belle mais elle cache des ***", mot: "abîmes" },
-  { texte: "Les chaînes les plus solides sont celles qu’on ne voit pas et les plus légères celles du ***", mot: "désir" },
-  { texte: "On ne fait pas d’omelette sans casser des ***", mot: "coquilles" },
-  { texte: "À chacun son goût et chacun son ***", mot: "avis" },
-  { texte: "Le savoir est une richesse que l’on ne peut perdre, contrairement à la***", mot: "monnaie" },
-  { texte: "Qui trotte doucement va loin et qui file trop vite trébuche sur la ***", mot: "pierre" },
-  { texte: "Le vent se lève, il faut tenter de tenir la ***", mot: "cap" },
-  { texte: "Le monde est un théâtre et nous ne sommes que des ***", mot: "rôles" },
-  { texte: "On ne jette pas la pierre quand on a un *** en main", mot: "miroir" },
-  { texte: "La mémoire est un jardin qu’il faut arroser, sinon il se couvre de ***", mot: "ronces" },
-  { texte: "L’espoir est le compagnon du courage et le frère de la ***", mot: "ténacité" },
-  { texte: "Les grandes idées naissent dans un esprit ***", mot: "ingénieux" },
-  { texte: "Il faut tourner sept fois sa langue dans son *** avant de parler", mot: "palais" },
-  { texte: "Le cœur a ses raisons que la raison ignore et parfois le *** aussi", mot: "corps" },
-  { texte: "L’art de la guerre est celui de la stratégie et celui de la ***", mot: "ruse" },
-  { texte: "On ne peut plaire à tout le monde, surtout aux ***", mot: "critiques" },
-  { texte: "L’argent parle, mais le silence vaut ***", mot: "saphir" }, 
-  { texte: "Le feu purifie tout, même les cœurs les plus ***", mot: "froids" },
-  { texte: "On reconnaît l’arbre à ses fruits et l’homme à ses ***", mot: "réalisations" },
-  { texte: "La vérité sort de la bouche des ***", mot: "enfants" },
-  { texte: "La chance sourit aux audacieux et fuit les ***", mot: "peureux" },
-  { texte: "Qui ne risque rien n’a rien et qui reste passif perd son ***", mot: "occasion" }
-];
+  phrases: { texte: string, mot: string }[] = [
+    { texte: "On ne peut pas attraper deux *** à la fois", mot: "proies" },
+    { texte: "Même les montagnes les plus hautes commencent par un ***", mot: "pas" },
+    { texte: "Il faut savoir ménager la chèvre et le ***", mot: "loup" },
+    { texte: "La curiosité est un vilain ***", mot: "travers" },
+    { texte: "La lumière jaillit là où règne le ***", mot: "calme" },
+    { texte: "L’arbre cache souvent la forêt et le *** aussi", mot: "détail" },
+    { texte: "Qui sème le vent récolte la ***", mot: "tourmente" },
+    { texte: "Mieux vaut un mauvais arrangement qu’un bon ***", mot: "procès" },
+    { texte: "Les belles paroles ne font pas le ***", mot: "repas" },
+    { texte: "C’est dans l’adversité que l’on découvre le vrai ***", mot: "courage" },
+    { texte: "Il n’y a pas de roses sans ***", mot: "piquants" },
+    { texte: "Tout ce qui brille n’est pas ***", mot: "diamant" },
+    { texte: "Le temps perdu ne se retrouve jamais et la *** non plus", mot: "jeunesse" },
+    { texte: "À force de tirer sur la corde, elle finit par se ***", mot: "briser" },
+    { texte: "L’appétit vient en mangeant et la curiosité en ***", mot: "observant" },
+    { texte: "Chaque nuage a sa ***", mot: "clarté" },
+    { texte: "La parole est d’argent, mais le silence est de ***", mot: "sagesse" },
+    { texte: "On n’apprend pas à un vieux singe à faire des ***", mot: "tours" },
+    { texte: "Qui veut voyager loin ménage sa ***", mot: "force" },
+    { texte: "La patience est amère, mais son fruit est ***", mot: "mielleux" },
+    { texte: "Il ne faut pas réveiller le chat qui dort et le *** non plus", mot: "tigre" },
+    { texte: "Le mensonge a des jambes courtes mais la vérité a des ***", mot: "ailes" },
+    { texte: "À bon vin point d’***", mot: "enseigne" },
+    { texte: "On attire plus les mouches avec du *** qu’avec du vinaigre", mot: "nectar" },
+    { texte: "Les murs ont des ***", mot: "oreilles" },
+    { texte: "Il vaut mieux être seul que mal ***", mot: "entouré" },
+    { texte: "La mer est belle mais elle cache des ***", mot: "abîmes" },
+    { texte: "Les chaînes les plus solides sont celles qu’on ne voit pas et les plus légères celles du ***", mot: "désir" },
+    { texte: "On ne fait pas d’omelette sans casser des ***", mot: "coquilles" },
+    { texte: "À chacun son goût et chacun son ***", mot: "avis" },
+    { texte: "Le savoir est une richesse que l’on ne peut perdre, contrairement à la***", mot: "monnaie" },
+    { texte: "Qui trotte doucement va loin et qui file trop vite trébuche sur la ***", mot: "pierre" },
+    { texte: "Le vent se lève, il faut tenter de tenir la ***", mot: "cap" },
+    { texte: "Le monde est un théâtre et nous ne sommes que des ***", mot: "rôles" },
+    { texte: "On ne jette pas la pierre quand on a un *** en main", mot: "miroir" },
+    { texte: "La mémoire est un jardin qu’il faut arroser, sinon il se couvre de ***", mot: "ronces" },
+    { texte: "L’espoir est le compagnon du courage et le frère de la ***", mot: "ténacité" },
+    { texte: "Les grandes idées naissent dans un esprit ***", mot: "ingénieux" },
+    { texte: "Il faut tourner sept fois sa langue dans son *** avant de parler", mot: "palais" },
+    { texte: "Le cœur a ses raisons que la raison ignore et parfois le *** aussi", mot: "corps" },
+    { texte: "L’art de la guerre est celui de la stratégie et celui de la ***", mot: "ruse" },
+    { texte: "On ne peut plaire à tout le monde, surtout aux ***", mot: "critiques" },
+    { texte: "L’argent parle, mais le silence vaut ***", mot: "saphir" },
+    { texte: "Le feu purifie tout, même les cœurs les plus ***", mot: "froids" },
+    { texte: "On reconnaît l’arbre à ses fruits et l’homme à ses ***", mot: "réalisations" },
+    { texte: "La vérité sort de la bouche des ***", mot: "enfants" },
+    { texte: "La chance sourit aux audacieux et fuit les ***", mot: "peureux" },
+    { texte: "Qui ne risque rien n’a rien et qui reste passif perd son ***", mot: "occasion" }
+  ];
 
   phrasesDejaJouees: Set<number> = new Set();
   phraseActuelle?: { texte: string, mot: string };
@@ -125,38 +128,70 @@ export class JeuComponent implements OnInit {
     { image: 'assets/images/gagnant3.jpg', message: 'Chaussettes douces et chaudes, parfaites pour l’hiver.', nom: 'Sophie', ville: 'Laval' },
   ];
 
+  constructor(private invitationService: InvitationService) { }
+
   // ================== INIT ==================
+
   ngOnInit(): void {
     this.emailsInscrits = JSON.parse(localStorage.getItem('emailsJeu') || '{}');
 
     const urlParams = new URLSearchParams(window.location.search);
     const tokenInvite = urlParams.get('invite');
+    const registeringEmail = urlParams.get('registerEmail');
 
     if (tokenInvite) {
-      for (let mail in this.emailsInscrits) {
-        const joueur = this.emailsInscrits[mail];
-        if (!joueur) continue;
+      // On stocke le token en attente (court délai possible si tu veux)
+      localStorage.setItem('pendingInviteToken', tokenInvite);
+      localStorage.setItem('pendingInviteToken_ts', Date.now().toString());
 
-        if (joueur.token === tokenInvite) {
-          const registeringEmail = urlParams.get('registerEmail');
-          if (registeringEmail && registeringEmail.toLowerCase() !== mail) {
-            const keyFriends = mail + '_friends';
-            const friendsList: string[] = JSON.parse(localStorage.getItem(keyFriends) || '[]');
-
-            if (!friendsList.includes(registeringEmail.toLowerCase()) && this.emailsInscrits[registeringEmail.toLowerCase()]) {
-              friendsList.push(registeringEmail.toLowerCase());
-              localStorage.setItem(keyFriends, JSON.stringify(friendsList));
-
-              const invites = parseInt(localStorage.getItem(mail + '_invites') || '0', 10);
-              if (invites < this.maxBonus) {
-                localStorage.setItem(mail + '_invites', (invites + 1).toString());
-              }
-            }
-          }
-          break;
-        }
+      // Si le lien contient déjà registerEmail, on peut traiter tout de suite
+      if (registeringEmail) {
+        this.processPendingInviteFor(registeringEmail.toLowerCase());
       }
     }
+  }
+  
+  
+ 
+  /**
+   * Traite un token d'invitation stocké en localStorage pour l'email qui vient de s'inscrire.
+   * - évite les doublons
+   * - plafonne à this.maxBonus
+   * - supprime le token "pending" après traitement
+   */
+  private processPendingInviteFor(registeringEmail: string): void {
+    const token = localStorage.getItem('pendingInviteToken');
+    if (!token) return;
+
+    const regLower = registeringEmail.toLowerCase();
+
+    // trouver l'email de l'invitant (les clés de emailsInscrits sont déjà en lower-case)
+    const inviterEmail = Object.keys(this.emailsInscrits).find(k => {
+      return this.emailsInscrits[k] && this.emailsInscrits[k].token === token;
+    });
+
+    // pas d'auto-invitation
+    if (!inviterEmail || inviterEmail === regLower) {
+      localStorage.removeItem('pendingInviteToken');
+      localStorage.removeItem('pendingInviteToken_ts');
+      return;
+    }
+
+    const keyFriends = inviterEmail + '_friends';
+    const friendsList: string[] = JSON.parse(localStorage.getItem(keyFriends) || '[]');
+
+    if (!friendsList.includes(regLower)) {
+      friendsList.push(regLower);
+      localStorage.setItem(keyFriends, JSON.stringify(friendsList));
+
+      const invites = parseInt(localStorage.getItem(inviterEmail + '_invites') || '0', 10);
+      const newInvites = Math.min(invites + 1, this.maxBonus);
+      localStorage.setItem(inviterEmail + '_invites', newInvites.toString());
+    }
+
+    // nettoie le token en attente pour éviter double comptage
+    localStorage.removeItem('pendingInviteToken');
+    localStorage.removeItem('pendingInviteToken_ts');
   }
 
   // ================== GETTERS ==================
@@ -175,38 +210,37 @@ export class JeuComponent implements OnInit {
     setTimeout(() => document.getElementById('inscription')?.scrollIntoView({ behavior: 'smooth' }));
   }
 
-  inscription(): void {
-    const emailLower = this.email.toLowerCase();
-    let joueur = this.emailsInscrits[emailLower];
+async inscription(): Promise<void> {
+  const emailLower = this.email.toLowerCase();
+  const token = btoa(emailLower + Date.now());
 
-    if (!joueur) {
-      const token = btoa(emailLower + Date.now());
-      this.emailsInscrits[emailLower] = { prenom: this.prenom || 'Participant', token, tentatives: 0 };
-      joueur = this.emailsInscrits[emailLower];
-      localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
-      if (!localStorage.getItem(emailLower + '_invites')) localStorage.setItem(emailLower + '_invites', '0');
-      if (!localStorage.getItem(emailLower + '_friends')) localStorage.setItem(emailLower + '_friends', JSON.stringify([]));
-    }
+  const joueur: JoueurFirestore = {
+    email: emailLower,
+    prenom: this.prenom || 'Participant',
+    token,
+    amis: [],
+    tentatives: 0
+  };
 
-    this.joueurActuel = joueur;
-    this.majCompteur(emailLower);
+  // Sauvegarde dans Firebase via ton service
+  await this.invitationService.sauvegarderJoueur(joueur);
 
-    if (joueur.tentatives >= 1 && this.compteurBonus > 0) {
-      this.resultatMessage = `❌ Maximum de tentatives atteint ! Invitez 3 amis pour rejouer (${this.maxBonus - this.compteurBonus}/${this.maxBonus}).`;
-      this.resultColor = 'red';
-      this.afficherBonus = true;
-      this.afficherJeu = true;
-      this.afficherCode = false;
-      this.afficherChrono = false;
-      return;
-    }
+  // Optionnel : sauvegarde locale pour compatibilité existante
+  this.emailsInscrits[emailLower] = { prenom: joueur.prenom, token: joueur.token, tentatives: joueur.tentatives };
+  localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
+  if (!localStorage.getItem(emailLower + '_invites')) localStorage.setItem(emailLower + '_invites', '0');
+  if (!localStorage.getItem(emailLower + '_friends')) localStorage.setItem(emailLower + '_friends', JSON.stringify([]));
 
-    this.afficherJeu = true;
-    this.nouvellePartie();
-    this.startTimer();
-    setTimeout(() => document.getElementById('jeuSection')?.scrollIntoView({ behavior: 'smooth' }));
-  }
+  this.processPendingInviteFor(emailLower);
 
+  this.joueurActuel = joueur;
+  this.majCompteur(emailLower);
+
+  this.afficherJeu = true;
+  this.nouvellePartie();
+  this.startTimer();
+  setTimeout(() => document.getElementById('jeuSection')?.scrollIntoView({ behavior: 'smooth' }));
+}
   majCompteur(email: string): void {
     const invites = parseInt(localStorage.getItem(email + '_invites') || '0', 10);
     const restant = this.maxBonus - invites;
@@ -233,12 +267,8 @@ export class JeuComponent implements OnInit {
 
     this.codeComplet = this.phraseActuelle.mot.toUpperCase();
     // REMPLACEMENT: créer un trait long de la même longueur que le mot
-    const traitLong = '_____';
+    const traitLong = '_'.repeat(this.phraseActuelle.mot.length);
     this.codeAffiche = this.phraseActuelle.texte.replace(/\*+/g, traitLong);
-
-
-
-
 
     this.resultatMessage = '';
     this.reponseSaisie = '';
@@ -388,11 +418,46 @@ export class JeuComponent implements OnInit {
 
   // ================== PARTAGE ==================
   copierLien(): void {
-    alert('Le lien d\'invitation n’est pas affiché. Utilisez l’email reçu.');
+    if (!this.joueurActuel) {
+      alert('Veuillez vous inscrire avant de copier le lien.');
+      return;
+    }
+
+    const lien = `${environment.baseUrl}?invite=${encodeURIComponent(this.joueurActuel.token)}`;
+
+    navigator.clipboard.writeText(lien)
+      .then(() => {
+        this.resultatMessage = '✅ Lien copié dans le presse-papier !';
+        this.resultColor = 'green';
+      })
+      .catch(() => alert('❌ Impossible de copier le lien.'));
   }
 
   partager(reseau: 'facebook' | 'whatsapp' | 'twitter' | 'instagram'): void {
-    alert('Partage direct indisponible. Utilisez l’email reçu.');
+    if (!this.joueurActuel) {
+      alert('Veuillez vous inscrire avant de partager.');
+      return;
+    }
+
+    const lien = `${environment.baseUrl}?invite=${encodeURIComponent(this.joueurActuel.token)}`;
+    let url = '';
+
+    switch (reseau) {
+      case 'facebook':
+        url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(lien)}`;
+        break;
+      case 'twitter':
+        url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(lien)}&text=${encodeURIComponent("Viens jouer avec moi 🎯")}`;
+        break;
+      case 'whatsapp':
+        url = `https://wa.me/?text=${encodeURIComponent("Rejoins-moi au jeu 🎉 " + lien)}`;
+        break;
+      case 'instagram':
+        alert('📌 Instagram ne supporte pas le partage direct par URL. Copiez le lien et collez-le dans votre bio ou vos messages privés.');
+        return;
+    }
+
+    if (url) window.open(url, '_blank');
   }
 
   rejouer(): void {
@@ -409,4 +474,4 @@ export class JeuComponent implements OnInit {
     this.nouvellePartie();
     this.startTimer();
   }
-}
+} // 👈 très important : cette accolade ferme la classe JeuComponent
