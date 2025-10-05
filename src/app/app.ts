@@ -1,31 +1,29 @@
-// src/app/app.ts
 import { Component } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
+import { importProvidersFrom } from '@angular/core';
+import { RouterModule } from '@angular/router';
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideFirestore, getFirestore } from '@angular/fire/firestore';
+import { provideAnalytics, getAnalytics } from '@angular/fire/analytics';
 import { environment } from '../environments/environment';
 import { JeuComponent } from './jeu/jeu';
-import { app, analytics } from '../firebase-config'; // Assure-toi du bon chemin
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [JeuComponent],
+  imports: [JeuComponent, RouterModule], // 🔹 Ajout RouterModule ici
   template: `<app-jeu></app-jeu>`,
   styleUrls: ['./app.css']
 })
-export class AppComponent {  ngOnInit(): void {
-    // Vérifier que Firebase est initialisé
-    console.log('Firebase app:', app);
-    console.log('Firebase analytics:', analytics);
+export class AppComponent {}
 
-    if (app && analytics) {
-      console.log('✅ Firebase fonctionne correctement !');
-    } else {
-      console.error('❌ Problème d’initialisation Firebase');
-    }
-  }
-}
-
- 
-
+bootstrapApplication(AppComponent, {
+  providers: [
+    importProvidersFrom(
+      RouterModule.forRoot([]) // 🔹 Fournit ActivatedRoute
+    ),
+    provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
+    provideFirestore(() => getFirestore()),
+    provideAnalytics(() => getAnalytics())
+  ]
+}).catch(err => console.error(err));

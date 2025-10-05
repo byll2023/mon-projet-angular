@@ -1,23 +1,19 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import emailjs from '@emailjs/browser';
 import { InvitationService, JoueurFirestore } from '../services/invitation.service';
 import { environment } from '../../environments/environment';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
-
-
-interface Joueur {
-  prenom: string;
-  token: string;
-  tentatives: number;
-}
 
 interface Avis {
   image: string;
   message: string;
   nom: string;
   ville: string;
+
 }
 
 @Component({
@@ -29,7 +25,7 @@ interface Avis {
 })
 export class JeuComponent implements OnInit {
 
-  // ================== VARIABLES JEU ==================
+  // ================= VARIABLES JEU =================
   codeComplet: string = '';
   codeAffiche: string = '';
   reponseSaisie: string = '';
@@ -39,11 +35,20 @@ export class JeuComponent implements OnInit {
   compteurBonus: number = 0;
   tentativeEnCours: boolean = false;
 
-  // ================== AFFICHAGE ==================
+
+  // ================= AFFICHAGE =================
+  afficherInscription: boolean = false;
+  afficherJeu: boolean = false;
+  afficherAdresse: boolean = false;
+  afficherBonus: boolean = false;
+  bonusDisponible: boolean = true;
+  resultatMessage: string = '';
+  resultColor: string = 'black';
+  victoire: boolean = false;
   afficherCode: boolean = true;
   afficherChrono: boolean = true;
 
-  // ================== PHRASES ==================
+  // ================= PHRASES =================
   phrases: { texte: string, mot: string }[] = [
     { texte: "On ne peut pas attraper deux *** à la fois", mot: "proies" },
     { texte: "Même les montagnes les plus hautes commencent par un ***", mot: "pas" },
@@ -94,179 +99,196 @@ export class JeuComponent implements OnInit {
     { texte: "La chance sourit aux audacieux et fuit les ***", mot: "peureux" },
     { texte: "Qui ne risque rien n’a rien et qui reste passif perd son ***", mot: "occasion" }
   ];
-
   phrasesDejaJouees: Set<number> = new Set();
   phraseActuelle?: { texte: string, mot: string };
 
-  // ================== VARIABLES JOUEUR ==================
+  // ================= VARIABLES JOUEUR =================
   prenom: string = '';
   email: string = '';
+  lienInvitation?: string;
   accepterNewsletter: boolean = false;
-  joueurActuel?: Joueur;
+  joueurActuel?: JoueurFirestore;
   invitationEnvoyee: boolean = false;
+  compteurAmis = 0;
+  unsubscribeSnapshot?: () => void;
 
-  // ================== VARIABLES LIVRAISON ==================
+
+  // ================= VARIABLES LIVRAISON =================
   adresse: string = '';
   ville: string = '';
   codePostal: string = '';
-  afficherAdresse: boolean = false;
+  emailAmi: string = ''; // Champ pour stocker l'email de l'ami à inviter
 
-  // ================== AFFICHAGE ==================
-  afficherInscription: boolean = false;
-  afficherJeu: boolean = false;
-  afficherBonus: boolean = false;
-  bonusDisponible: boolean = true;
-  resultatMessage: string = '';
-  resultColor: string = 'black';
-  victoire: boolean = false;
-
-  // ================== STOCKAGE LOCAL ==================
-  emailsInscrits: { [key: string]: Joueur } = {};
+  // ================= AVIS GAGNANTS =================
   avisGagnants: Avis[] = [
     { image: 'assets/images/gagnant1.jpg', message: 'Super confortables, j’adore !', nom: 'Marie', ville: 'Montréal' },
     { image: 'assets/images/gagnant2.jpg', message: 'Merci Ferargile 🎉 je suis trop content !', nom: 'Karim', ville: 'Québec' },
     { image: 'assets/images/gagnant3.jpg', message: 'Chaussettes douces et chaudes, parfaites pour l’hiver.', nom: 'Sophie', ville: 'Laval' },
   ];
 
-  constructor(private invitationService: InvitationService) { }
+  constructor(
+    private route: ActivatedRoute,
+    private invitationService: InvitationService
+  ) { }
 
-  // ================== INIT ==================
 
-  ngOnInit(): void {
-    this.emailsInscrits = JSON.parse(localStorage.getItem('emailsJeu') || '{}');
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const tokenInvite = urlParams.get('invite');
-    const registeringEmail = urlParams.get('registerEmail');
+  // ================= INIT =================
+     ngOnInit() {
+    try {
+      const auth = getAuth();
 
-    if (tokenInvite) {
-      // On stocke le token en attente (court délai possible si tu veux)
-      localStorage.setItem('pendingInviteToken', tokenInvite);
-      localStorage.setItem('pendingInviteToken_ts', Date.now().toString());
+      onAuthStateChanged(auth, async (user) => {
+        try {
+          if (user?.email) {
+            this.joueurActuel = await this.invitationService.getJoueur(user.email);
 
-      // Si le lien contient déjà registerEmail, on peut traiter tout de suite
-      if (registeringEmail) {
-        this.processPendingInviteFor(registeringEmail.toLowerCase());
-      }
+            if (this.joueurActuel) {
+              this.lienInvitation = this.invitationService.creerLienInvitation(this.joueurActuel.token);
+              this.compteurAmis = this.joueurActuel.amis?.length || 0;
+
+              // Écoute en direct
+              this.unsubscribeSnapshot = this.invitationService.ecouterCompteurAmis(
+                user.email,
+                (nbAmis) => { this.compteurAmis = nbAmis; }
+              );
+            }
+
+            const inviteToken = this.route.snapshot.queryParamMap.get('invite');
+            if (inviteToken) {
+              await this.invitationService.ajouterAmi(inviteToken, user.email);
+            }
+          }
+        } catch (err) {
+          console.error('Erreur auth/Firestore ngOnInit:', err);
+        }
+      });
+    } catch (err) {
+      console.error('Erreur ngOnInit JeuComponent:', err);
     }
   }
-  
-  
- 
-  /**
-   * Traite un token d'invitation stocké en localStorage pour l'email qui vient de s'inscrire.
-   * - évite les doublons
-   * - plafonne à this.maxBonus
-   * - supprime le token "pending" après traitement
-   */
-  private processPendingInviteFor(registeringEmail: string): void {
-    const token = localStorage.getItem('pendingInviteToken');
-    if (!token) return;
 
-    const regLower = registeringEmail.toLowerCase();
-
-    // trouver l'email de l'invitant (les clés de emailsInscrits sont déjà en lower-case)
-    const inviterEmail = Object.keys(this.emailsInscrits).find(k => {
-      return this.emailsInscrits[k] && this.emailsInscrits[k].token === token;
-    });
-
-    // pas d'auto-invitation
-    if (!inviterEmail || inviterEmail === regLower) {
-      localStorage.removeItem('pendingInviteToken');
-      localStorage.removeItem('pendingInviteToken_ts');
-      return;
-    }
-
-    const keyFriends = inviterEmail + '_friends';
-    const friendsList: string[] = JSON.parse(localStorage.getItem(keyFriends) || '[]');
-
-    if (!friendsList.includes(regLower)) {
-      friendsList.push(regLower);
-      localStorage.setItem(keyFriends, JSON.stringify(friendsList));
-
-      const invites = parseInt(localStorage.getItem(inviterEmail + '_invites') || '0', 10);
-      const newInvites = Math.min(invites + 1, this.maxBonus);
-      localStorage.setItem(inviterEmail + '_invites', newInvites.toString());
-    }
-
-    // nettoie le token en attente pour éviter double comptage
-    localStorage.removeItem('pendingInviteToken');
-    localStorage.removeItem('pendingInviteToken_ts');
+  ngOnDestroy() {
+    if (this.unsubscribeSnapshot) this.unsubscribeSnapshot();
+    clearInterval(this.timer);
   }
-
-  // ================== GETTERS ==================
+  // ================= GETTERS =================
   get invites(): number {
-    const emailLower = this.email.toLowerCase();
-    return parseInt(localStorage.getItem(emailLower + '_invites') || '0', 10);
+    return this.joueurActuel?.amis?.length || 0; // 🔹 MODIF
+  }
+
+  get invitesLabel(): string { // 🔹 MODIF
+    return `${this.invites}/3`;
   }
 
   get afficherBoutonContinuer(): boolean {
     return this.victoire && !this.afficherAdresse;
   }
 
-  // ================== INSCRIPTION ==================
+  // ================= AFFICHAGE FORMULAIRE =================
   afficherFormulaire(): void {
     this.afficherInscription = true;
-    setTimeout(() => document.getElementById('inscription')?.scrollIntoView({ behavior: 'smooth' }));
   }
 
-async inscription(): Promise<void> {
-  const emailLower = this.email.toLowerCase();
-  const token = btoa(emailLower + Date.now());
+  // ================= INSCRIPTION =================
+   async inscription(): Promise<void> {
+    try {
+      if (!this.email) return alert('Veuillez saisir votre email.');
 
-  const joueur: JoueurFirestore = {
-    email: emailLower,
-    prenom: this.prenom || 'Participant',
-    token,
-    amis: [],
-    tentatives: 0
-  };
+      const emailLower = this.email.toLowerCase();
+      const joueurExistant = await this.invitationService.getJoueurParEmail(emailLower);
 
-  // Sauvegarde dans Firebase via ton service
-  await this.invitationService.sauvegarderJoueur(joueur);
+      if (joueurExistant) {
+        this.joueurActuel = joueurExistant;
 
-  // Optionnel : sauvegarde locale pour compatibilité existante
-  this.emailsInscrits[emailLower] = { prenom: joueur.prenom, token: joueur.token, tentatives: joueur.tentatives };
-  localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
-  if (!localStorage.getItem(emailLower + '_invites')) localStorage.setItem(emailLower + '_invites', '0');
-  if (!localStorage.getItem(emailLower + '_friends')) localStorage.setItem(emailLower + '_friends', JSON.stringify([]));
+        if (joueurExistant.tentatives >= 1 && joueurExistant.amis.length < 3) {
+          this.lienInvitation = joueurExistant.lienInvitation
+            || this.invitationService.creerLienInvitation(joueurExistant.token);
+          await this.invitationService.sauvegarderJoueur({ ...joueurExistant, lienInvitation: this.lienInvitation });
+          alert('Vous avez déjà joué ! Invitez 3 amis pour une seconde chance.');
+          this.afficherJeu = true;
+          return;
+        }
+      } else {
+        const token = btoa(emailLower + Date.now());
+        const nouveauJoueur: JoueurFirestore = {
+          email: emailLower,
+          prenom: this.prenom || 'Participant',
+          token,
+          amis: [],
+          tentatives: 0
+        };
+        await this.invitationService.sauvegarderJoueur(nouveauJoueur);
+        this.joueurActuel = nouveauJoueur;
+      }
 
-  this.processPendingInviteFor(emailLower);
+      this.afficherInscription = false;
+      this.afficherJeu = true;
+      await this.nouvellePartie();
+      this.startTimer();
 
-  this.joueurActuel = joueur;
-  this.majCompteur(emailLower);
+      this.processPendingInviteFor(emailLower);
 
-  this.afficherJeu = true;
-  this.nouvellePartie();
-  this.startTimer();
-  setTimeout(() => document.getElementById('jeuSection')?.scrollIntoView({ behavior: 'smooth' }));
-}
-  majCompteur(email: string): void {
-    const invites = parseInt(localStorage.getItem(email + '_invites') || '0', 10);
-    const restant = this.maxBonus - invites;
-    this.compteurBonus = restant >= 0 ? restant : 0;
-    this.bonusDisponible = invites < this.maxBonus;
+    } catch (err) {
+      console.error('Erreur inscription:', err);
+    }
   }
 
-  // ================== JEU ==================
-  nouvellePartie(): void {
+  private processPendingInviteFor(registeringEmail: string): void {
+    try {
+      const token = localStorage.getItem('pendingInviteToken');
+      if (!token) return;
+
+      if (this.joueurActuel?.token === token) {
+        localStorage.removeItem('pendingInviteToken');
+        localStorage.removeItem('pendingInviteToken_ts');
+        return;
+      }
+
+      this.invitationService.ajouterAmi(token, registeringEmail);
+      localStorage.removeItem('pendingInviteToken');
+      localStorage.removeItem('pendingInviteToken_ts');
+    } catch (err) {
+      console.error('Erreur processPendingInviteFor:', err);
+    }
+  }
+
+  // ================= JEU =================
+  async nouvellePartie(): Promise<void> {
+    if (!this.joueurActuel) return;
+
+    // 🔹 Recharge les données réelles du joueur depuis Firestore
+    const joueurMaj = await this.invitationService.getJoueur(this.joueurActuel.email);
+    if (joueurMaj) this.joueurActuel = joueurMaj;
+
+    // 🔹 Bloque s’il a déjà joué une fois et n’a pas encore invité 3 amis
+    if (this.joueurActuel.tentatives >= 1 && this.joueurActuel.amis.length < 3) {
+      alert('🚫 Vous avez déjà joué ! Invitez 3 amis pour débloquer une seconde chance.');
+      this.tentativeEnCours = false;
+      return;
+    }
+
+    // 🔹 Si le joueur a invité 3 amis ou plus → réinitialiser la tentative
+    if (this.joueurActuel.tentatives >= 1 && this.joueurActuel.amis.length >= 3) {
+      this.joueurActuel.tentatives = 0;
+      await this.invitationService.sauvegarderJoueur(this.joueurActuel);
+      alert('✅ Vous avez débloqué une seconde chance ! Bonne chance 🎉');
+    }
+
+    // 🔹 Démarre une nouvelle partie
+    this.tentativeEnCours = true;
     this.afficherCode = true;
     this.afficherChrono = true;
 
+    if (this.phrasesDejaJouees.size >= this.phrases.length) this.phrasesDejaJouees.clear();
     let index: number;
-    if (this.phrasesDejaJouees.size >= this.phrases.length) {
-      this.phrasesDejaJouees.clear();
-    }
-
-    do {
-      index = Math.floor(Math.random() * this.phrases.length);
-    } while (this.phrasesDejaJouees.has(index));
+    do { index = Math.floor(Math.random() * this.phrases.length); }
+    while (this.phrasesDejaJouees.has(index));
 
     this.phraseActuelle = this.phrases[index];
     this.phrasesDejaJouees.add(index);
 
     this.codeComplet = this.phraseActuelle.mot.toUpperCase();
-    // REMPLACEMENT: créer un trait long de la même longueur que le mot
     const traitLong = '_'.repeat(this.phraseActuelle.mot.length);
     this.codeAffiche = this.phraseActuelle.texte.replace(/\*+/g, traitLong);
 
@@ -277,76 +299,128 @@ async inscription(): Promise<void> {
   }
 
   verifierCode(): void {
-    if (!this.tentativeEnCours) return;
+    if (!this.joueurActuel) { alert('Veuillez vous inscrire avant de jouer.'); return; }
 
-    const input = this.reponseSaisie.trim().toUpperCase();
-    const emailLower = this.email.toLowerCase();
-    const joueur = this.joueurActuel;
-
-    if (!joueur) { alert('Veuillez vous inscrire avant de jouer.'); return; }
+    if (this.joueurActuel.tentatives >= 1 && this.joueurActuel.amis.length < 3) {
+      this.lienInvitation = this.invitationService.creerLienInvitation(this.joueurActuel.token);
+      alert('🚫 Vous avez déjà joué ! Invitez 3 amis pour une seconde chance.');
+      this.tentativeEnCours = false;
+      return;
+    }
 
     this.tentativeEnCours = false;
-    joueur.tentatives++;
-    localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
-
+    const input = this.reponseSaisie.trim().toUpperCase();
+    this.joueurActuel.tentatives++;
     clearInterval(this.timer);
 
     if (input === this.codeComplet) {
-      this.resultatMessage = '🎉 Bravo ! Vous avez trouvé le mot manquant 🎯';
+      this.resultatMessage = '🎉 Bravo ! Vous avez trouvé le mot manquant (Appuyer sur Continuer)🎯';
       this.resultColor = 'green';
       this.victoire = true;
-      this.invitationEnvoyee = true;
-      this.notifierAdmin(`Le joueur ${joueur.prenom} (${emailLower}) a gagné le jeu.`);
-      setTimeout(() => document.getElementById('btnContinuer')?.scrollIntoView({ behavior: 'smooth' }), 300);
+      this.notifierAdmin(`Le joueur ${this.joueurActuel.prenom} (${this.joueurActuel.email}) a gagné le jeu.`);
     } else {
       this.resultatMessage = `❌ Mauvais choix... Le mot était "${this.codeComplet}".`;
       this.resultColor = 'red';
-      this.ajouterInvitation(emailLower);
-      this.majCompteur(emailLower);
     }
+
+    this.invitationService.sauvegarderJoueur(this.joueurActuel);
+  }
+  // ================= COPIER LIEN =================
+  copierLien(): void {
+    if (!this.lienInvitation) return;
+    navigator.clipboard.writeText(this.lienInvitation)
+      .then(() => alert('Lien copié ! Partage-le avec tes amis 🎉'))
+      .catch(() => alert('Erreur lors de la copie du lien.'));
   }
 
-  // ================== INVITATIONS & ADMIN ==================
-  inviterAmi(): void {
-    if (!this.joueurActuel) return;
-    this.ajouterInvitation(this.email.toLowerCase());
+  // ================= ADRESSE =================
+  passerAdresse(): void {
+    this.afficherAdresse = true;
+    setTimeout(() => document.getElementById('adresseForm')?.scrollIntoView({ behavior: 'smooth' }), 300);
   }
 
-  private ajouterInvitation(emailPlayerLower: string, messagePersonnalise?: string): void {
-    const joueur = this.emailsInscrits[emailPlayerLower];
-    if (!joueur) return;
+  validerAdresse(): void {
+    if (!this.prenom || !this.adresse || !this.ville || !this.codePostal) {
+      alert('Veuillez remplir tous les champs.');
+      return;
+    }
+    if (this.joueurActuel) {
+      this.invitationService.sauvegarderJoueur({
+        ...this.joueurActuel,
+        adresse: this.adresse,
+        ville: this.ville,
+        codePostal: this.codePostal
+      });
+    }
 
-    const lien = `${environment.baseUrl}?invite=${encodeURIComponent(joueur.token)}`;
+    this.envoyerEmail(); // Envoie l'email au joueur
+    this.notifierAdminGagnant();           // Notifie l’admin
+
+    alert(`Merci ${this.prenom} ! Votre adresse a été enregistrée pour la livraison.`);
+    this.afficherAdresse = false;
+
+  }
+
+  envoyerEmail(): void {
+    if (!this.prenom || !this.email || !this.adresse || !this.ville || !this.codePostal) return;
+
+    const messageLivraison = `
+      Nous vous enverrons un mail de confirmation la veille de votre livraison.
+      L’estimation de la durée de livraison est de 3 à 4 jours ouvrables.
+      👉 Veuillez nous indiquer par courriel le lieu de dépôt souhaité.
+    `;
+
+    emailjs.send('service_9od4cf4', 'template_sjokwih', {
+      to_email: this.email,
+      prenom: this.prenom,
+      adresse: this.adresse,
+      ville: this.ville,
+      codePostal: this.codePostal,
+      message: messageLivraison
+    }, '4NHyPfpmCWsVhqyAO')
+      .catch(err => console.error('Erreur EmailJS client:', err));
+  }
+
+  // ================= ADMIN =================
+  // Méthode générique pour notifier l’admin
+  private notifierAdmin(message: string, type: 'jeu' | 'invitation' | 'livraison' = 'jeu'): void {
+    const templateParams = { message, type };
+    emailjs.send(
+      'service_9od4cf4',
+      'template_jiceud5',
+      templateParams,
+      '4NHyPfpmCWsVhqyAO'
+    )
+      .then(() => console.log(`✅ Admin notifié : ${message}`))
+      .catch(err => console.error('Erreur EmailJS admin:', err));
+  }
+
+  // Méthode spécifique pour un gagnant
+  private notifierAdminGagnant(): void {
+    if (!this.prenom || !this.email || !this.adresse || !this.ville || !this.codePostal) return;
+
     const templateParams = {
-      to_email: emailPlayerLower,
-      prenom: joueur.prenom,
-      lien_parrainage: lien,
-      message: messagePersonnalise || `Bonjour ${joueur.prenom},\n\nMerci d'avoir joué ! Transférez ce lien à 3 amis pour obtenir une seconde chance.\n\nLien : ${lien}`
+      prenom: this.prenom,
+      email: this.email,
+      adresse: this.adresse,
+      ville: this.ville,
+      codePostal: this.codePostal,
+      message: `Le joueur ${this.prenom} (${this.email}) a gagné le jeu.`
     };
 
-    emailjs.send('service_9od4cf4', 'template_dj7cys6', templateParams, '4NHyPfpmCWsVhqyAO')
-      .then(() => {
-        console.log('Email d\'invitation envoyé au joueur.');
-        const invitationsEnvoyees = JSON.parse(localStorage.getItem('invitationsEnvoyees') || '{}');
-        invitationsEnvoyees[emailPlayerLower] = true;
-        localStorage.setItem('invitationsEnvoyees', JSON.stringify(invitationsEnvoyees));
-        this.resultatMessage = `📧 Invitation envoyée à ${joueur.prenom} (${emailPlayerLower}) !`;
-        this.resultColor = 'green';
-      })
-      .catch((err: any) => console.error('Erreur EmailJS invitation joueur:', err));
+    emailjs.send(
+      'service_9od4cf4',
+      'template_jiceud5',
+      templateParams,
+      '4NHyPfpmCWsVhqyAO'
+    )
+      .then(() => console.log(`✅ Admin notifié pour ${this.prenom} (${this.email})`))
+      .catch(err => console.error('Erreur EmailJS admin:', err));
   }
-
-  private notifierAdmin(message: string, type: 'jeu' | 'invitation' | 'livraison' = 'jeu'): void {
-    emailjs.send('service_9od4cf4', 'template_jiceud5', { message }, '4NHyPfpmCWsVhqyAO')
-      .catch((err: any) => console.error('Erreur EmailJS admin:', err));
-  }
-
-  // ================== TIMER ==================
+  // ================= TIMER =================
   startTimer(): void {
     clearInterval(this.timer);
     this.chrono = 30;
-    this.afficherChrono = true;
-    this.afficherCode = true;
     this.tentativeEnCours = true;
 
     this.timer = setInterval(() => {
@@ -359,119 +433,14 @@ async inscription(): Promise<void> {
   }
 
   finChronoOuEchec(): void {
-    clearInterval(this.timer);
-    const emailLower = this.email.toLowerCase();
-    const joueur = this.emailsInscrits[emailLower];
-    if (!joueur) return;
+    if (!this.joueurActuel) return;
 
     if (this.tentativeEnCours) {
       this.tentativeEnCours = false;
-      joueur.tentatives++;
-      localStorage.setItem('emailsJeu', JSON.stringify(this.emailsInscrits));
+      this.joueurActuel.tentatives++;
     }
 
-    this.afficherCode = false;
-    this.afficherChrono = false;
     this.resultatMessage = `⏰ Temps écoulé ! Le mot était : ${this.codeComplet}`;
     this.resultColor = 'orange';
-
-    this.ajouterInvitation(emailLower);
-    this.majCompteur(emailLower);
-    this.notifierAdmin(`Le joueur ${joueur.prenom} (${emailLower}) a perdu par temps écoulé.`, 'jeu');
   }
-
-  // ================== LIVRAISON ==================
-  passerAdresse(): void {
-    this.afficherAdresse = true;
-    setTimeout(() => document.getElementById('adresseForm')?.scrollIntoView({ behavior: 'smooth' }));
-  }
-
-  validerAdresse(): void {
-    if (!this.prenom || !this.adresse || !this.ville || !this.codePostal) {
-      alert('Veuillez remplir tous les champs.');
-      return;
-    }
-    this.envoyerEmail();
-    alert(`Merci ${this.prenom} ! Votre adresse a été enregistrée pour la livraison.`);
-    this.afficherAdresse = false;
-  }
-
-  envoyerEmail(): void {
-    const messageLivraison = `
-      Nous vous enverrons un mail de confirmation la veille de votre livraison.
-      L’estimation de la durée de livraison est de 4 à 5 jours ouvrables.
-      👉 Veuillez nous indiquer par courriel le lieu de dépôt souhaité.
-    `;
-
-    emailjs.send('service_9od4cf4', 'template_sjokwih', {
-      to_email: this.email,
-      prenom: this.prenom,
-      adresse: this.adresse,
-      ville: this.ville,
-      codePostal: this.codePostal,
-      message: messageLivraison
-    }, '4NHyPfpmCWsVhqyAO')
-      .catch((err: any) => console.error('Erreur EmailJS client:', err));
-
-    this.notifierAdmin(`Le client ${this.prenom} (${this.email}) a reçu son email de confirmation.`, 'livraison');
-  }
-
-  // ================== PARTAGE ==================
-  copierLien(): void {
-    if (!this.joueurActuel) {
-      alert('Veuillez vous inscrire avant de copier le lien.');
-      return;
-    }
-
-    const lien = `${environment.baseUrl}?invite=${encodeURIComponent(this.joueurActuel.token)}`;
-
-    navigator.clipboard.writeText(lien)
-      .then(() => {
-        this.resultatMessage = '✅ Lien copié dans le presse-papier !';
-        this.resultColor = 'green';
-      })
-      .catch(() => alert('❌ Impossible de copier le lien.'));
-  }
-
-  partager(reseau: 'facebook' | 'whatsapp' | 'twitter' | 'instagram'): void {
-    if (!this.joueurActuel) {
-      alert('Veuillez vous inscrire avant de partager.');
-      return;
-    }
-
-    const lien = `${environment.baseUrl}?invite=${encodeURIComponent(this.joueurActuel.token)}`;
-    let url = '';
-
-    switch (reseau) {
-      case 'facebook':
-        url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(lien)}`;
-        break;
-      case 'twitter':
-        url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(lien)}&text=${encodeURIComponent("Viens jouer avec moi 🎯")}`;
-        break;
-      case 'whatsapp':
-        url = `https://wa.me/?text=${encodeURIComponent("Rejoins-moi au jeu 🎉 " + lien)}`;
-        break;
-      case 'instagram':
-        alert('📌 Instagram ne supporte pas le partage direct par URL. Copiez le lien et collez-le dans votre bio ou vos messages privés.');
-        return;
-    }
-
-    if (url) window.open(url, '_blank');
-  }
-
-  rejouer(): void {
-    const emailLower = this.email.toLowerCase();
-    const invites = parseInt(localStorage.getItem(emailLower + '_invites') || '0', 10);
-    if (invites < this.maxBonus) {
-      this.resultatMessage = `❌ Vous devez avoir 3 amis inscrits via votre lien pour rejouer. (${invites}/${this.maxBonus})`;
-      this.resultColor = 'red';
-      this.afficherCode = false;
-      this.afficherChrono = false;
-      this.afficherBonus = true;
-      return;
-    }
-    this.nouvellePartie();
-    this.startTimer();
-  }
-} // 👈 très important : cette accolade ferme la classe JeuComponent
+}

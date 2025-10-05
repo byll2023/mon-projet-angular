@@ -251,3 +251,48 @@ footer a:hover {
   display: inline-block;
   /* facultatif, pour être sûr qu'il reste aligné comme un bouton */
 }
+/* Container général */
+.invitation-section {
+  margin: 15px 0;
+  padding: 10px;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 500px;
+}
+
+/* Texte d’introduction */
+.invitation-section p {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+}
+
+/* Lien cliquable */
+.invitation-section a {
+  word-break: break-all; /* pour ne pas casser le layout si le lien est long */
+  color: #1a73e8;        /* bleu type lien */
+  text-decoration: underline;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+/* Bouton "Copier" */
+.invitation-section button {
+  align-self: flex-start;  /* pour qu’il soit à gauche du bloc */
+  padding: 6px 12px;
+  background-color: #1a73e8;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background-color 0.2s ease;
+}
+
+.invitation-section button:hover {
+  background-color: #155ab6;
+}

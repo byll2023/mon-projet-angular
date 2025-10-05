@@ -29,7 +29,12 @@
       <input id="prenom" type="text" placeholder="Votre prénom" [(ngModel)]="prenom" name="prenom" required />
 
       <label for="email">Email</label>
-      <input id="email" type="email" placeholder="Votre email" [(ngModel)]="email" name="email" required />
+      <input id="email" type="email" placeholder="Votre email" [(ngModel)]="email" name="email" required
+        pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" />
+      <p *ngIf="formInscription.controls['email']?.invalid && formInscription.controls['email']?.touched"
+        style="color:red;">
+        📧 Veuillez entrer une adresse email valide (ex: prenom@domaine.com)
+      </p>
 
       <label>
         <input type="checkbox" [(ngModel)]="accepterNewsletter" name="newsletter" />
@@ -61,19 +66,21 @@
     <!-- Message résultat -->
     <p class="result" [style.color]="resultColor">{{ resultatMessage }}</p>
 
+    <!-- Lien d'invitation pour partager avec des amis -->
+    <div *ngIf="joueurActuel && lienInvitation" class="invitation-section">
+      <p>🔗 Voici ton lien d’invitation à partager :</p>
+      <a [href]="lienInvitation" target="_blank" rel="noopener noreferrer">{{ lienInvitation }}</a>
+      <button class="btn" (click)="copierLien()">Copier le lien</button>
+    </div>
+
+
     <!-- Bouton Continuer si victoire -->
     <button id="btnContinuer" *ngIf="afficherBoutonContinuer" class="btn btn-continuer" (click)="passerAdresse()">
       Continuer ➡️
     </button>
 
-    <!-- BONUS : inviter un ami -->
-    <div *ngIf="joueurActuel && joueurActuel.tentatives >= 1 && invites < maxBonus">
-      <button class="btn" (click)="inviterAmi()">📧 Envoyer le lien de seconde chance</button>
-      <p>💡 Astuce : Le lien vous sera envoyé directement dans votre boîte mail pour rejouer au jeu. </p>
-    </div>
-
-    <!-- Compteur amis validés -->
     <p>Amis validés : {{ invites }}/{{ maxBonus }}</p>
+
   </section>
 
   <!-- FORMULAIRE ADRESSE -->

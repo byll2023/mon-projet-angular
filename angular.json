@@ -21,7 +21,7 @@
               { "glob": "**/*", "input": "public", "output": "/" }
             ],
             "styles": ["src/styles.css"],
-            "baseHref": "/mon-projet-angular/"
+            "baseHref": "/"
           },
           "configurations": {
             "production": {
