@@ -26,6 +26,7 @@ export interface JoueurFirestore {
   adresse?: string;
   ville?: string;
   codePostal?: string;
+  phrasesDejaJouees?: number[];
 }
 
 // ================== SERVICE ==================

@@ -99,7 +99,7 @@ export class JeuComponent implements OnInit {
     { texte: "La chance sourit aux audacieux et fuit les ***", mot: "peureux" },
     { texte: "Qui ne risque rien n’a rien et qui reste passif perd son ***", mot: "occasion" }
   ];
-  phrasesDejaJouees: Set<number> = new Set();
+  phrasesDejaJouees: Set<number> = new Set()
   phraseActuelle?: { texte: string, mot: string };
 
   // ================= VARIABLES JOUEUR =================
@@ -147,6 +147,12 @@ export class JeuComponent implements OnInit {
               this.lienInvitation = this.invitationService.creerLienInvitation(this.joueurActuel.token);
               this.compteurAmis = this.joueurActuel.amis?.length || 0;
 
+              // 🔹 Chargement des phrases déjà jouées depuis Firestore
+              if (this.joueurActuel.phrasesDejaJouees) {
+                this.phrasesDejaJouees = new Set(this.joueurActuel.phrasesDejaJouees);
+              }
+
+
               // Écoute en direct
               this.unsubscribeSnapshot = this.invitationService.ecouterCompteurAmis(
                 user.email,
@@ -172,6 +178,7 @@ export class JeuComponent implements OnInit {
     if (this.unsubscribeSnapshot) this.unsubscribeSnapshot();
     clearInterval(this.timer);
   }
+
   // ================= GETTERS =================
   get invites(): number {
     return this.joueurActuel?.amis?.length || 0; // 🔹 MODIF
@@ -280,13 +287,29 @@ export class JeuComponent implements OnInit {
     this.afficherCode = true;
     this.afficherChrono = true;
 
-    if (this.phrasesDejaJouees.size >= this.phrases.length) this.phrasesDejaJouees.clear();
+    // 🔹 Réinitialise si toutes les phrases ont été jouées
+    if (this.phrasesDejaJouees.size >= this.phrases.length) {
+      this.phrasesDejaJouees.clear();
+    }
+
+    // 🔹 Choisit une phrase jamais jouée
     let index: number;
-    do { index = Math.floor(Math.random() * this.phrases.length); }
-    while (this.phrasesDejaJouees.has(index));
+    do {
+      index = Math.floor(Math.random() * this.phrases.length);
+    } while (this.phrasesDejaJouees.has(index));
 
     this.phraseActuelle = this.phrases[index];
     this.phrasesDejaJouees.add(index);
+
+    // 🔹 Sauvegarde les phrases jouées dans Firestore
+    if (this.joueurActuel) {
+      this.joueurActuel.phrasesDejaJouees = Array.from(this.phrasesDejaJouees);
+      await this.invitationService.sauvegarderJoueur(this.joueurActuel);
+    }
+
+    // 🔹 Sauvegarde locale (en cas de refresh)
+    localStorage.setItem('phrasesDejaJouees', JSON.stringify(Array.from(this.phrasesDejaJouees)));
+
 
     this.codeComplet = this.phraseActuelle.mot.toUpperCase();
     const traitLong = '_'.repeat(this.phraseActuelle.mot.length);
@@ -298,7 +321,7 @@ export class JeuComponent implements OnInit {
     this.tentativeEnCours = true;
   }
 
-  verifierCode(): void {
+  async verifierCode(): Promise<void> {
     if (!this.joueurActuel) { alert('Veuillez vous inscrire avant de jouer.'); return; }
 
     if (this.joueurActuel.tentatives >= 1 && this.joueurActuel.amis.length < 3) {
@@ -317,15 +340,28 @@ export class JeuComponent implements OnInit {
       this.resultatMessage = '🎉 Bravo ! Vous avez trouvé le mot manquant (Appuyer sur Continuer)🎯';
       this.resultColor = 'green';
       this.victoire = true;
-      this.notifierAdmin(`Le joueur ${this.joueurActuel.prenom} (${this.joueurActuel.email}) a gagné le jeu.`);
+      this.notifierAdmin(
+        `Le joueur ${this.joueurActuel.prenom} (${this.joueurActuel.email}) a gagné le jeu.`,
+        'jeu',
+        this.codeComplet
+      );
+
+      // 🧹 Nettoyage des phrases jouées après victoire
+      this.phrasesDejaJouees.clear();
+      localStorage.removeItem('phrasesDejaJouees');
+
+      if (this.joueurActuel) {
+        this.joueurActuel.phrasesDejaJouees = [];
+        await this.invitationService.sauvegarderJoueur(this.joueurActuel);
+      }
+
     } else {
       this.resultatMessage = `❌ Mauvais choix... Le mot était "${this.codeComplet}".`;
       this.resultColor = 'red';
       this.envoyerEmailEchecEtNotifierAdmin('mauvaise réponse');
 
     }
-
-    this.invitationService.sauvegarderJoueur(this.joueurActuel);
+    await this.invitationService.sauvegarderJoueur(this.joueurActuel);
   }
   // ================= COPIER LIEN =================
   copierLien(): void {
@@ -385,8 +421,18 @@ export class JeuComponent implements OnInit {
 
   // ================= ADMIN =================
   // Méthode générique pour notifier l’admin
-  private notifierAdmin(message: string, type: 'jeu' | 'invitation' | 'livraison' = 'jeu'): void {
-    const templateParams = { message, type };
+  private notifierAdmin(
+    message: string,
+    type: 'jeu' | 'invitation' | 'livraison' = 'jeu',
+    motGagnant?: string
+  ): void {
+    const templateParams: any = { message, type };
+
+    // Ajoute le mot gagnant si fourni (nom du champ : motGagnant)
+    if (motGagnant) {
+      templateParams.motGagnant = motGagnant;
+    }
+
     emailjs.send(
       'service_9od4cf4',
       'template_jiceud5',
@@ -396,7 +442,6 @@ export class JeuComponent implements OnInit {
       .then(() => console.log(`✅ Admin notifié : ${message}`))
       .catch(err => console.error('Erreur EmailJS admin:', err));
   }
-
   // Méthode spécifique pour un gagnant
   private notifierAdminGagnant(): void {
     if (!this.prenom || !this.email || !this.adresse || !this.ville || !this.codePostal) return;
@@ -407,7 +452,7 @@ export class JeuComponent implements OnInit {
       adresse: this.adresse,
       ville: this.ville,
       codePostal: this.codePostal,
-      message: `Le joueur ${this.prenom} (${this.email}) a gagné le jeu. le mot était ${this.codeComplet}`
+      message: `Le joueur ${this.prenom} (${this.email}) a gagné le jeu.`
     };
 
     emailjs.send(
