@@ -134,7 +134,7 @@ export class JeuComponent implements OnInit {
 
 
   // ================= INIT =================
-     ngOnInit() {
+  ngOnInit() {
     try {
       const auth = getAuth();
 
@@ -191,7 +191,7 @@ export class JeuComponent implements OnInit {
   }
 
   // ================= INSCRIPTION =================
-   async inscription(): Promise<void> {
+  async inscription(): Promise<void> {
     try {
       if (!this.email) return alert('Veuillez saisir votre email.');
 
@@ -321,6 +321,8 @@ export class JeuComponent implements OnInit {
     } else {
       this.resultatMessage = `❌ Mauvais choix... Le mot était "${this.codeComplet}".`;
       this.resultColor = 'red';
+      this.envoyerEmailEchecEtNotifierAdmin('mauvaise réponse');
+
     }
 
     this.invitationService.sauvegarderJoueur(this.joueurActuel);
@@ -405,7 +407,7 @@ export class JeuComponent implements OnInit {
       adresse: this.adresse,
       ville: this.ville,
       codePostal: this.codePostal,
-      message: `Le joueur ${this.prenom} (${this.email}) a gagné le jeu.`
+      message: `Le joueur ${this.prenom} (${this.email}) a gagné le jeu. le mot était ${this.codeComplet}`
     };
 
     emailjs.send(
@@ -417,6 +419,24 @@ export class JeuComponent implements OnInit {
       .then(() => console.log(`✅ Admin notifié pour ${this.prenom} (${this.email})`))
       .catch(err => console.error('Erreur EmailJS admin:', err));
   }
+  private envoyerEmailEchecEtNotifierAdmin(raison: 'mauvaise réponse' | 'temps écoulé'): void {
+    if (!this.prenom || !this.email || !this.codeComplet) return;
+
+    // Envoi de l'email au joueur
+    emailjs.send('service_9od4cf4', 'template_dj7cys6', {
+      to_email: this.email,
+      prenom: this.prenom,
+      code: this.codeComplet,
+      raison: raison
+    }, '4NHyPfpmCWsVhqyAO')
+      .then(() => console.log(`📧 Email d'échec envoyé à ${this.email}`))
+      .catch(err => console.error('Erreur EmailJS échec joueur:', err));
+
+    // Notifier l'admin
+    const message = `⚠️ Le joueur ${this.prenom} (${this.email}) a échoué (${raison}). Le mot était : ${this.codeComplet}`;
+    this.notifierAdmin(message, 'jeu');
+  }
+
   // ================= TIMER =================
   startTimer(): void {
     clearInterval(this.timer);
@@ -442,5 +462,6 @@ export class JeuComponent implements OnInit {
 
     this.resultatMessage = `⏰ Temps écoulé ! Le mot était : ${this.codeComplet}`;
     this.resultColor = 'orange';
+    this.envoyerEmailEchecEtNotifierAdmin('temps écoulé');
   }
 }

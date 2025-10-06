@@ -2,10 +2,9 @@
 
   <!-- HEADER -->
   <header>
-    <h1>🎁 Gagnez vos chaussettes épaisses pour affronter le froid ! </h1>
+    <h1>🎁 Gagnez vos chaussettes épaisses pour affronter le froid !</h1>
     <p>Tentez de gagner vos chaussettes <strong>Fitloam</strong>, disponibles uniquement sur
-      <a href="https://ferargile.com" target="_blank">ferargile.com</a>,
-      le site officiel de la marque.
+      <a href="https://ferargile.com" target="_blank">ferargile.com</a>, le site officiel de la marque.
     </p>
   </header>
 
@@ -30,7 +29,7 @@
 
       <label for="email">Email</label>
       <input id="email" type="email" placeholder="Votre email" [(ngModel)]="email" name="email" required
-        pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" />
+        pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" />
       <p *ngIf="formInscription.controls['email']?.invalid && formInscription.controls['email']?.touched"
         style="color:red;">
         📧 Veuillez entrer une adresse email valide (ex: prenom@domaine.com)
@@ -38,7 +37,7 @@
 
       <label>
         <input type="checkbox" [(ngModel)]="accepterNewsletter" name="newsletter" />
-        J’accepte de recevoir les nouveautés ferargile
+        J’accepte de recevoir les nouveautés Ferargile
       </label>
 
       <button type="submit" class="btn" [disabled]="!formInscription.valid">
@@ -51,7 +50,6 @@
   <section id="jeuSection" class="jeu" *ngIf="afficherJeu">
     <h2>Trouvez le mot manquant</h2>
 
-    <!-- Affichage de la phrase avec le mot caché -->
     <p class="phrase" *ngIf="phraseActuelle">{{ codeAffiche }}</p>
 
     <!-- Chrono -->
@@ -59,28 +57,27 @@
 
     <!-- Saisie du mot -->
     <label for="mot">Votre mot</label>
-    <input id="mot" type="text" [(ngModel)]="reponseSaisie" name="mot" placeholder="Entrez le mot manquant"
-      [disabled]="!tentativeEnCours" />
+    <input id="mot" type="text" [(ngModel)]="reponseSaisie" name="mot"
+      placeholder="Entrez le mot manquant" [disabled]="!tentativeEnCours" />
     <button class="btn" (click)="verifierCode()" [disabled]="!tentativeEnCours">Vérifier</button>
 
     <!-- Message résultat -->
     <p class="result" [style.color]="resultColor">{{ resultatMessage }}</p>
 
-    <!-- Lien d'invitation pour partager avec des amis -->
+    <!-- Lien d'invitation -->
     <div *ngIf="joueurActuel && lienInvitation" class="invitation-section">
       <p>🔗 Voici ton lien d’invitation à partager :</p>
       <a [href]="lienInvitation" target="_blank" rel="noopener noreferrer">{{ lienInvitation }}</a>
       <button class="btn" (click)="copierLien()">Copier le lien</button>
     </div>
 
-
     <!-- Bouton Continuer si victoire -->
-    <button id="btnContinuer" *ngIf="afficherBoutonContinuer" class="btn btn-continuer" (click)="passerAdresse()">
+    <button id="btnContinuer" *ngIf="afficherBoutonContinuer" class="btn btn-continuer"
+      (click)="passerAdresse()">
       Continuer ➡️
     </button>
 
     <p>Amis validés : {{ invites }}/{{ maxBonus }}</p>
-
   </section>
 
   <!-- FORMULAIRE ADRESSE -->
@@ -125,7 +122,7 @@
   <footer>
     <p>© 2025 Ferargile. Tous droits réservés.</p>
     <p>
-      Decouvrez
+      Découvrez
       <a href="https://ferargile.com/" target="_blank">ferargile.com</a>
     </p>
   </footer>
