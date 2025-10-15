@@ -50,55 +50,56 @@ export class JeuComponent implements OnInit {
 
   // ================= PHRASES =================
   phrases: { texte: string, mot: string }[] = [
-    { texte: "On ne peut pas attraper deux *** à la fois", mot: "proies" },
-    { texte: "Même les montagnes les plus hautes commencent par un ***", mot: "pas" },
-    { texte: "Il faut savoir ménager la chèvre et le ***", mot: "loup" },
-    { texte: "La curiosité est un vilain ***", mot: "travers" },
-    { texte: "La lumière jaillit là où règne le ***", mot: "calme" },
-    { texte: "L’arbre cache souvent la forêt et le *** aussi", mot: "détail" },
-    { texte: "Qui sème le vent récolte la ***", mot: "tourmente" },
-    { texte: "Mieux vaut un mauvais arrangement qu’un bon ***", mot: "procès" },
-    { texte: "Les belles paroles ne font pas le ***", mot: "repas" },
-    { texte: "C’est dans l’adversité que l’on découvre le vrai ***", mot: "courage" },
-    { texte: "Il n’y a pas de roses sans ***", mot: "piquants" },
-    { texte: "Tout ce qui brille n’est pas ***", mot: "diamant" },
-    { texte: "Le temps perdu ne se retrouve jamais et la *** non plus", mot: "jeunesse" },
-    { texte: "À force de tirer sur la corde, elle finit par se ***", mot: "briser" },
-    { texte: "L’appétit vient en mangeant et la curiosité en ***", mot: "observant" },
-    { texte: "Chaque nuage a sa ***", mot: "clarté" },
-    { texte: "La parole est d’argent, mais le silence est de ***", mot: "sagesse" },
-    { texte: "On n’apprend pas à un vieux singe à faire des ***", mot: "tours" },
-    { texte: "Qui veut voyager loin ménage sa ***", mot: "force" },
-    { texte: "La patience est amère, mais son fruit est ***", mot: "mielleux" },
-    { texte: "Il ne faut pas réveiller le chat qui dort et le *** non plus", mot: "tigre" },
-    { texte: "Le mensonge a des jambes courtes mais la vérité a des ***", mot: "ailes" },
-    { texte: "À bon vin point d’***", mot: "enseigne" },
-    { texte: "On attire plus les mouches avec du *** qu’avec du vinaigre", mot: "nectar" },
-    { texte: "Les murs ont des ***", mot: "oreilles" },
-    { texte: "Il vaut mieux être seul que mal ***", mot: "entouré" },
-    { texte: "La mer est belle mais elle cache des ***", mot: "abîmes" },
-    { texte: "Les chaînes les plus solides sont celles qu’on ne voit pas et les plus légères celles du ***", mot: "désir" },
-    { texte: "On ne fait pas d’omelette sans casser des ***", mot: "coquilles" },
-    { texte: "À chacun son goût et chacun son ***", mot: "avis" },
-    { texte: "Le savoir est une richesse que l’on ne peut perdre, contrairement à la***", mot: "monnaie" },
-    { texte: "Qui trotte doucement va loin et qui file trop vite trébuche sur la ***", mot: "pierre" },
-    { texte: "Le vent se lève, il faut tenter de tenir la ***", mot: "cap" },
-    { texte: "Le monde est un théâtre et nous ne sommes que des ***", mot: "rôles" },
-    { texte: "On ne jette pas la pierre quand on a un *** en main", mot: "miroir" },
-    { texte: "La mémoire est un jardin qu’il faut arroser, sinon il se couvre de ***", mot: "ronces" },
-    { texte: "L’espoir est le compagnon du courage et le frère de la ***", mot: "ténacité" },
-    { texte: "Les grandes idées naissent dans un esprit ***", mot: "ingénieux" },
-    { texte: "Il faut tourner sept fois sa langue dans son *** avant de parler", mot: "palais" },
-    { texte: "Le cœur a ses raisons que la raison ignore et parfois le *** aussi", mot: "corps" },
-    { texte: "L’art de la guerre est celui de la stratégie et celui de la ***", mot: "ruse" },
-    { texte: "On ne peut plaire à tout le monde, surtout aux ***", mot: "critiques" },
-    { texte: "L’argent parle, mais le silence vaut ***", mot: "saphir" },
-    { texte: "Le feu purifie tout, même les cœurs les plus ***", mot: "froids" },
-    { texte: "On reconnaît l’arbre à ses fruits et l’homme à ses ***", mot: "réalisations" },
-    { texte: "La vérité sort de la bouche des ***", mot: "enfants" },
-    { texte: "La chance sourit aux audacieux et fuit les ***", mot: "peureux" },
-    { texte: "Qui ne risque rien n’a rien et qui reste passif perd son ***", mot: "occasion" }
-  ];
+  { texte: "Celui qui poursuit l’éclat oublie souvent l’ombre du ***", mot: "vrai" },
+  { texte: "Les miroirs ne mentent pas, ils montrent ce que l’on ***", mot: "fuit" },
+  { texte: "Les racines du savoir plongent dans la ***", mot: "patience" },
+  { texte: "La pluie efface la poussière mais pas la ***", mot: "mémoire" },
+  { texte: "Le temps polit ce que la vengeance ***", mot: "brise" },
+  { texte: "Celui qui court après l’ombre perd la ***", mot: "lumière" },
+  { texte: "Les promesses se fanent plus vite que les ***", mot: "roses" },
+  { texte: "Le bruit attire la foule, le silence attire la ***", mot: "sagesse" },
+  { texte: "Un esprit libre ne craint pas le ***", mot: "jugement" },
+  { texte: "Les cœurs blessés écrivent les plus belles ***", mot: "vérités" },
+  { texte: "Quand l’orgueil parle, la raison se ***", mot: "tait" },
+  { texte: "Les plus grandes tempêtes naissent d’un simple ***", mot: "souffle" },
+  { texte: "La peur construit des murs, le courage des ***", mot: "ponts" },
+  { texte: "Les yeux voient, mais seuls les cœurs ***", mot: "comprennent" },
+  { texte: "Un mot mal placé peut briser une ***", mot: "âme" },
+  { texte: "Les cicatrices sont les tatouages du ***", mot: "courage" },
+  { texte: "Ce n’est pas la mer qui noie, c’est le ***", mot: "courant" },
+  { texte: "Les fleurs du mal poussent dans les *** fertiles", mot: "silences" },
+  { texte: "L’amour sans courage n’est qu’un reflet sans ***", mot: "profondeur" },
+  { texte: "Le temps enseigne ce que la colère fait ***", mot: "oublier" },
+  { texte: "Les chaînes les plus lourdes sont celles que l’on ***", mot: "ignore" },
+  { texte: "Celui qui regarde en arrière trébuche sur le ***", mot: "présent" },
+  { texte: "Le pardon ne change pas le passé, mais éclaire le ***", mot: "chemin" },
+  { texte: "Les esprits faibles se plaignent, les forts ***", mot: "avancent" },
+  { texte: "Un cœur sans feu devient un corps sans ***", mot: "âme" },
+  { texte: "Le bonheur ne s’achète pas, il se ***", mot: "cultive" },
+  { texte: "Sous la cendre du doute brûle souvent la ***", mot: "certitude" },
+  { texte: "L’eau claire cache parfois les *** profondes", mot: "abysses" },
+  { texte: "Un cœur sans rêves est comme un désert sans ***", mot: "mirage" },
+  { texte: "Les mots soignent parfois mieux que les ***", mot: "mains" },
+  { texte: "L’égo nourrit l’orgueil, l’humilité nourrit la ***", mot: "grandeur" },
+  { texte: "Un mensonge répété devient une *** crue", mot: "illusion" },
+  { texte: "Le vrai pouvoir ne s’impose pas, il se ***", mot: "gagne" },
+  { texte: "Les pas du sage laissent des traces dans la ***", mot: "poussière" },
+  { texte: "Les vérités amères font pousser les *** dures", mot: "leçons" },
+  { texte: "On reconnaît l’âme d’un homme à ses ***", mot: "silences" },
+  { texte: "Les rêves meurent quand la peur prend les ***", mot: "commandes" },
+  { texte: "L’échec n’est qu’un détour sur le chemin du ***", mot: "succès" },
+  { texte: "Un mot sincère vaut mille ***", mot: "excuses" },
+  { texte: "La solitude apprend à écouter le ***", mot: "cœur" },
+  { texte: "Les blessures du temps guérissent dans le ***", mot: "silence" },
+  { texte: "On ne trouve la paix qu’en cessant de ***", mot: "lutter" },
+  { texte: "Le mensonge rassure, la vérité ***", mot: "libère" },
+  { texte: "L’amour sans confiance est un ciel sans ***", mot: "soleil" },
+  { texte: "La patience est la clef des portes du ***", mot: "destin" },
+  { texte: "Les mots murmurés par le vent portent les ***", mot: "souvenirs" },
+  { texte: "Celui qui écoute le tonnerre apprend la ***", mot: "force" },
+  { texte: "La peur du vide crée les plus hautes ***", mot: "murailles" },
+  { texte: "On ne dompte pas la mer, on apprend à ***", mot: "naviguer" }
+];
   phrasesDejaJouees: Set<number> = new Set()
   phraseActuelle?: { texte: string, mot: string };
 
@@ -136,33 +137,63 @@ export class JeuComponent implements OnInit {
   // ================= INIT =================
   ngOnInit() {
     try {
-      const auth = getAuth();
+      // 1️⃣ — Sauvegarde immédiate du token d’invitation dans le localStorage
+      const inviteTokenFromUrl = this.route.snapshot.queryParamMap.get('invite');
+      if (inviteTokenFromUrl) {
+        localStorage.setItem('pendingInviteToken', inviteTokenFromUrl);
+        localStorage.setItem('pendingInviteToken_ts', Date.now().toString());
+        console.log('📩 Token invitation sauvegardé:', inviteTokenFromUrl);
+      }
 
+      const auth = getAuth();
       onAuthStateChanged(auth, async (user) => {
         try {
           if (user?.email) {
-            this.joueurActuel = await this.invitationService.getJoueur(user.email);
+            const emailLower = user.email.toLowerCase();
+            this.joueurActuel = await this.invitationService.getJoueur(emailLower);
 
-            if (this.joueurActuel) {
-              this.lienInvitation = this.invitationService.creerLienInvitation(this.joueurActuel.token);
-              this.compteurAmis = this.joueurActuel.amis?.length || 0;
-
-              // 🔹 Chargement des phrases déjà jouées depuis Firestore
-              if (this.joueurActuel.phrasesDejaJouees) {
-                this.phrasesDejaJouees = new Set(this.joueurActuel.phrasesDejaJouees);
-              }
-
-
-              // Écoute en direct
-              this.unsubscribeSnapshot = this.invitationService.ecouterCompteurAmis(
-                user.email,
-                (nbAmis) => { this.compteurAmis = nbAmis; }
-              );
+            // 2️⃣ — S’il n’existe pas encore dans "invitations", on le crée
+            if (!this.joueurActuel) {
+              const token = Math.random().toString(36).substring(2, 10);
+              const nouveauJoueur = {
+                email: emailLower,
+                prenom: user.displayName || '',
+                token,
+                amis: [],
+                tentatives: 0,
+              };
+              await this.invitationService.sauvegarderJoueur(nouveauJoueur);
+              this.joueurActuel = nouveauJoueur;
             }
 
-            const inviteToken = this.route.snapshot.queryParamMap.get('invite');
+            // 3️⃣ — Création / mise à jour du lien d’invitation
+            this.lienInvitation = this.invitationService.creerLienInvitation(this.joueurActuel.token);
+            this.compteurAmis = this.joueurActuel.amis?.length || 0;
+
+            // 🔹 Si phrases déjà jouées, on les recharge
+            if (this.joueurActuel.phrasesDejaJouees) {
+              this.phrasesDejaJouees = new Set(this.joueurActuel.phrasesDejaJouees);
+            }
+
+            // 4️⃣ — Écoute en direct du compteur d’amis
+            this.unsubscribeSnapshot = this.invitationService.ecouterCompteurAmis(
+              emailLower,
+              (nbAmis) => (this.compteurAmis = nbAmis)
+            );
+
+            // 5️⃣ — Traitement du token (URL ou sauvegardé)
+            const inviteToken =
+              this.route.snapshot.queryParamMap.get('invite') ||
+              (await this.invitationService.getPendingToken());
+
             if (inviteToken) {
-              await this.invitationService.ajouterAmi(inviteToken, user.email);
+              try {
+                await this.invitationService.ajouterAmi(inviteToken, emailLower);
+                console.log('✅ Ami ajouté via le token:', inviteToken);
+                await this.invitationService.supprimerPendingToken();
+              } catch (err) {
+                console.error('Erreur ajout ami:', err);
+              }
             }
           }
         } catch (err) {
@@ -328,6 +359,11 @@ export class JeuComponent implements OnInit {
       this.lienInvitation = this.invitationService.creerLienInvitation(this.joueurActuel.token);
       alert('🚫 Vous avez déjà joué ! Invitez 3 amis pour une seconde chance.');
       this.tentativeEnCours = false;
+      return;
+    }
+    
+    if (!this.tentativeEnCours) {
+      alert('⏰ Temps écoulé ou tentative déjà utilisée.');
       return;
     }
 
@@ -497,16 +533,33 @@ export class JeuComponent implements OnInit {
     }, 1000);
   }
 
-  finChronoOuEchec(): void {
+  async finChronoOuEchec(): Promise<void> {
+
     if (!this.joueurActuel) return;
 
+    // 🔒 On bloque le jeu immédiatement
     if (this.tentativeEnCours) {
       this.tentativeEnCours = false;
       this.joueurActuel.tentatives++;
     }
 
-    this.resultatMessage = `⏰ Temps écoulé ! Le mot était : ${this.codeComplet}`;
+    // 🔹 On n'affiche plus la bonne réponse
+    this.resultatMessage = `⏰ Temps écoulé ! Vous n'avez pas eu le temps de répondre.`;
     this.resultColor = 'orange';
+
+    // 🔹 On empêche toute nouvelle vérification ou saisie
+    this.victoire = false;
+    this.afficherCode = true; // tu peux laisser le texte visible
+    this.reponseSaisie = ''; // efface ce qui était saisi
+    this.afficherChrono = false;
+
+    // 🔹 Sauvegarde l’échec du joueur et notifie l’admin
     this.envoyerEmailEchecEtNotifierAdmin('temps écoulé');
+
+    // 🔹 Empêche une deuxième tentative sans relancer une nouvelle partie
+    if (this.joueurActuel) {
+      await this.invitationService.sauvegarderJoueur(this.joueurActuel);
+    }
   }
+
 }

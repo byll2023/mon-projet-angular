@@ -296,3 +296,30 @@ footer a:hover {
 .invitation-section button:hover {
   background-color: #155ab6;
 }
+.liste-amis {
+  background: #f8f8f8;
+  border-radius: 8px;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.liste-amis h4 {
+  margin: 0 0 5px 0;
+  color: #e94e1b;
+}
+
+.liste-amis ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.liste-amis li {
+  padding: 4px 0;
+  border-bottom: 1px solid #ddd;
+  font-size: 14px;
+}
+
+.liste-amis li:last-child {
+  border-bottom: none;
+}
