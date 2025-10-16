@@ -473,7 +473,7 @@ export class JeuComponent implements OnInit {
       'service_9od4cf4',
       'template_jiceud5',
       templateParams,
-      '4NHyPfpmCWsVhqyAO'
+      't3wLzAi9_luRE7pJT'
     )
       .then(() => console.log(`✅ Admin notifié : ${message}`))
       .catch(err => console.error('Erreur EmailJS admin:', err));
@@ -495,7 +495,7 @@ export class JeuComponent implements OnInit {
       'service_9od4cf4',
       'template_jiceud5',
       templateParams,
-      '4NHyPfpmCWsVhqyAO'
+      't3wLzAi9_luRE7pJT'
     )
       .then(() => console.log(`✅ Admin notifié pour ${this.prenom} (${this.email})`))
       .catch(err => console.error('Erreur EmailJS admin:', err));

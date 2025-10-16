@@ -20,12 +20,15 @@
             ],
             "tsConfig": "tsconfig.app.json",
             "assets": [
-              "favicon.ico",
-              "src/assets",
-              "public"
+              "src/favicon.ico",
+              {
+                "glob": "**/*",
+                "input": "public",
+                "output": "/"
+              }
             ],
             "styles": [
-              "styles-G5MVKY7M.css"
+              "src/styles.css"
             ],
             "baseHref": "/"
           },
