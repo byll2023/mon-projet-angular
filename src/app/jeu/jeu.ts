@@ -451,7 +451,7 @@ export class JeuComponent implements OnInit {
       ville: this.ville,
       codePostal: this.codePostal,
       message: messageLivraison
-    }, '4NHyPfpmCWsVhqyAO')
+    }, 't3wLzAi9_luRE7pJT')
       .catch(err => console.error('Erreur EmailJS client:', err));
   }
 
@@ -509,7 +509,7 @@ export class JeuComponent implements OnInit {
       prenom: this.prenom,
       code: this.codeComplet,
       raison: raison
-    }, '4NHyPfpmCWsVhqyAO')
+    }, 't3wLzAi9_luRE7pJT')
       .then(() => console.log(`📧 Email d'échec envoyé à ${this.email}`))
       .catch(err => console.error('Erreur EmailJS échec joueur:', err));
 
